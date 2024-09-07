@@ -19,17 +19,17 @@ const handleCreatePatent = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (!startupId || !title || !description || !pdfPath) {
             return res.status(400).json({ msg: "All fields are required" });
         }
+        let applicationDate = new Date().toISOString();
         let patent = yield prisma.patent.create({
             data: {
                 title,
                 description,
                 pdfPath,
                 status: "PENDING",
-                patentNumber: "", // Add the missing property
-                applicationDate: "", // Add the missing property
                 startupId: startupId // Add the missing property
             }
         });
+        return res.json({ msg: "Created Successfully" });
     }
     catch (err) {
         console.log(err);
@@ -65,7 +65,7 @@ const handleupdatePatent = (req, res) => __awaiter(void 0, void 0, void 0, funct
             data: {
                 title,
                 description,
-                pdfPath
+                pdfPath,
             }
         });
         return res.json({ msg: "Updated Successfully" });

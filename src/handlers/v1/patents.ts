@@ -9,17 +9,18 @@ export const handleCreatePatent = async (req: Request, res: Response) => {
         if (!startupId || !title || !description || !pdfPath) {
             return res.status(400).json({ msg: "All fields are required" })
         }
+
+        let applicationDate = new Date().toISOString()
         let patent = await prisma.patent.create({
             data: {
                 title,
                 description,
                 pdfPath,
                 status: "PENDING",
-                patentNumber: "", // Add the missing property
-                applicationDate: "", // Add the missing property
                 startupId: startupId // Add the missing property
             }
         })
+        return res.json({ msg: "Created Successfully" })
     }
     catch (err) {
         console.log(err)
@@ -48,6 +49,7 @@ export const handleupdatePatent = async (req: Request, res: Response) => {
         if(existingPatent.startup.founderId !== req.body.user.id){
             return res.status(400).json({msg: "Unauthorized"})
         }
+        
         let patent = await prisma.patent.update({
             where: {
                 id: patentId
@@ -55,7 +57,8 @@ export const handleupdatePatent = async (req: Request, res: Response) => {
             data: {
                 title,
                 description,
-                pdfPath
+                pdfPath,
+                
             }
         })
         return res.json({ msg: "Updated Successfully" })

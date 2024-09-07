@@ -28,7 +28,7 @@ model User {
   projects                 Project[]
   startups                 Startup[]
 
-  Funding Funding[]
+  grants Grant[]
 
   IPR IPR[]
 
@@ -61,7 +61,9 @@ model Project {
   updatedAt      DateTime        @updatedAt
   collaborations Collaboration[]
 
-  Funding Funding[]
+  grants Grant[]
+
+  GrantApplication GrantApplication[]
 }
 
 // Enum for Project Status
@@ -101,7 +103,8 @@ model Startup {
   updatedAt   DateTime  @updatedAt
   patents     Patent[]
   metrics     Metrics[]
-  Funding     Funding[]
+  grants     Grant[]
+  grantsApplied GrantApplication[]
 
   Analytics Analytics[]
 }
@@ -141,7 +144,7 @@ model Patent {
   startup         Startup   @relation(fields: [startupId], references: [id])
   startupId       Int
   description     String
-  patentNumber    String    @unique
+  patentNumber    String    @unique @default(uuid())
   pdfPath         String
   applicationDate DateTime @default(now())
   approvalDate    DateTime?
@@ -201,15 +204,33 @@ enum AnalyticsType {
 }
 
 // Funding model
-model Funding {
+model Grant {
   id            Int      @id @default(autoincrement())
-  amount        Float
   project       Project? @relation(fields: [projectId], references: [id])
   projectId     Int?
   startup       Startup? @relation(fields: [startupId], references: [id])
   startupId     Int?
-  fundingBody   User     @relation(fields: [fundingBodyId], references: [id])
+  fundingBody   User     @relation(fields: [fundingBodyId], references: [id])  
   fundingBodyId Int
+  title String
+  description String
+  remark String
+  status IPRStatus
+  requirements String
+  amount        Float
+  deadline  DateTime
+  isAssigned Boolean
+  applications GrantApplication[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model GrantApplication{
+  id Int @id @default(autoincrement())
+  grant Grant @relation(fields: [grantId], references: [id]) 
+  grantId Int
+  startup Startup? @relation(fields: [startupId], references: [id])
+  startupId Int?
+  project Project? @relation(fields: [projectId], references: [id])
+  projectId Int?
 }
