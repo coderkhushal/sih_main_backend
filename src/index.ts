@@ -15,6 +15,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended:true}))
 // app.use(ratelimiter)
 app.use("/auth", require("./routes/auth"))
+app.use("/startup"  , require("./routes/startup"))
 app.listen(3000, ()=>{
     console.log("Server is running on port 3000")
 })

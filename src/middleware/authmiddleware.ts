@@ -20,6 +20,7 @@ export const AuthMiddleware = async(req: Request, res: Response, next: NextFunct
             id: payload.id
         }
     })
+    
     if (!user) {
         return res.status(401).json({ msg: "Unauthorized" });
     }

@@ -9,13 +9,22 @@ import { DbManager } from "../../utils/DbManager.js";
  const prisma  = DbManager.getInstance().getClient()
 export const handlesignup = async (req: Request, res : Response)=>{
         let {name, email, password, role} = req.body
-        if(!name || !email || !password  || role){
+        if(!name || !email || !password  || !role){
             return res.status(400).json({message: "All fields are required"})
         }
         
         try{
             let salt = bcrypt.genSaltSync(10);
             password= await bcrypt.hash(password, salt )
+            let existingUser = await prisma.user.findUnique({
+                where:{
+                    email
+                }
+            })
+            if(existingUser){
+                return res.status(400).json({message: "User already exists"})
+            }
+
             let user= await prisma.user.create({
                 data:{
                     name,
@@ -29,7 +38,7 @@ export const handlesignup = async (req: Request, res : Response)=>{
          
             res.cookie("token", token)
             
-            res.json({success:true, message:"Created Successfully", token:token})
+            res.json({success:true, message:"Created Successfully", token:token ,user: {id: user.id, role:user.role}})
         }
         catch(er){
             console.log(er)
@@ -61,7 +70,7 @@ export const handleLogin = async (req: Request, res: Response) => {
         }
         let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, { expiresIn: "1d" })
         res.cookie("token", token)
-        res.json({ success: true, message: "Logged In Successfully", token : token })
+        res.json({ success: true, message: "Logged In Successfully", token : token , user :{id: user.id, role:user.role}})
     }
     catch (er) {
         console.log(er)

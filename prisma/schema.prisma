@@ -12,27 +12,31 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// User model
 model User {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  password   String
-  name       String
-  role       UserRole
-  projects   Project[]
-  startups   Startup[]
-  IPR        IPR[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-    emailVerified Boolean @default(false)
-  resetPasswordToken String?
+  id                       Int       @id @default(autoincrement())
+  email                    String    @unique
+  password                 String
+  name                     String
+  role                     String[]
+  emailVerified            Boolean   @default(false)
+  resetPasswordToken       String?
   resetPasswordTokenExpiry DateTime?
-  Collaboration Collaboration[]
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  projects                 Project[]
+  startups                 Startup[]
 
   Funding Funding[]
+
+  IPR IPR[]
+
+  Collaboration Collaboration[]
 }
 
-// Enum to specify user roles
-enum UserRole {
+// Enum for User roles
+enum Role {
   RESEARCHER
   INNOVATOR
   ENTREPRENEUR
@@ -41,118 +45,160 @@ enum UserRole {
   IPR_PROFESSIONAL
 }
 
-// Define the Project model
+// Project model
 model Project {
-  id             Int        @id @default(autoincrement())
+  id             Int             @id @default(autoincrement())
   title          String
   description    String
-  status         ProjectStatus
-  researcher     User       @relation(fields: [researcherId], references: [id])
+  status         Status
+  researcher     User            @relation(fields: [researcherId], references: [id])
   researcherId   Int
   startDate      DateTime
   endDate        DateTime?
-  progress       Float      // Percentage of project progress
-  funding        Float
+  progress       Float           @default(0)
+  funding        Float           @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   collaborations Collaboration[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
 
   Funding Funding[]
 }
 
-enum ProjectStatus {
+// Enum for Project Status
+enum Status {
   ONGOING
   COMPLETED
   PENDING
 }
 
-// Define the Collaboration model for researchers
+// Collaboration model
 model Collaboration {
   id        Int      @id @default(autoincrement())
   project   Project  @relation(fields: [projectId], references: [id])
   projectId Int
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// Define the Startup model
+// Startup model
 model Startup {
-  id           Int      @id @default(autoincrement())
-  name         String
-  description  String
-  founder      User     @relation(fields: [founderId], references: [id])
-  founderId    Int
-  funding      Float
-  progress     Float    // Percentage of startup growth progress
-  innovations  Innovation[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  founder     User      @relation(fields: [founderId], references: [id])
+  founderId   Int
+  foundedAt   String
+  teamSize    Int
+  location    String
+  industry    String
+  website     String?
+  funding     Float     @default(0)
+  progress    Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  patents     Patent[]
+  metrics     Metrics[]
+  Funding     Funding[]
 
-  Funding Funding[]
+  Analytics Analytics[]
 }
 
-// Define the Innovation model
-model Innovation {
-  id             Int      @id @default(autoincrement())
-  title          String
-  description    String
-  startup        Startup  @relation(fields: [startupId], references: [id])
-  startupId      Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
-
-// Define the IPR (Intellectual Property Rights) model
+// IPR model
 model IPR {
-  id              Int         @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   title           String
   type            IPRType
   status          IPRStatus
-  user            User        @relation(fields: [userId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
   userId          Int
   applicationDate DateTime
   approvalDate    DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
+// Enum for IPR Type
 enum IPRType {
   PATENT
   TRADEMARK
   COPYRIGHT
 }
 
+// Enum for IPR Status
 enum IPRStatus {
   PENDING
   APPROVED
   REJECTED
 }
 
-// Define the Funding model
-model Funding {
-  id          Int      @id @default(autoincrement())
-  amount      Float
-  project     Project  @relation(fields: [projectId], references: [id])
-  projectId   Int
-  startup     Startup? @relation(fields: [startupId], references: [id])
-  startupId   Int?
-  fundingBody User     @relation(fields: [fundingBodyId], references: [id])
-  fundingBodyId Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// Patent model (for managing startup patents and storing PDFs)
+model Patent {
+  id              Int       @id @default(autoincrement())
+  title           String
+  startup         Startup   @relation(fields: [startupId], references: [id])
+  startupId       Int
+  description     String
+  patentNumber    String    @unique
+  pdfPath         String
+  applicationDate DateTime
+  approvalDate    DateTime?
+  status          IPRStatus
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
-// Define the Analytics model
+// Metrics model (tracks performance and financial data for startups)
+model Metrics {
+  id        Int      @id @default(autoincrement())
+  startup   Startup  @relation(fields: [startupId], references: [id])
+  startupId Int
+  period    DateTime // e.g., 'Q1-2024', 'Jan-2024'
+  revenue   Float
+  profit    Float
+  expenses  Float
+  valuation Float
+  customers Int?
+  employees Int?
+  churnRate Float?
+  burnRate  Float?
+  cac       Float?
+  equity    Float?
+  runway    Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Analytics model (stores aggregated or derived insights)
 model Analytics {
-  id         Int      @id @default(autoincrement())
-  type       AnalyticsType
-  data       Json
-  createdAt  DateTime @default(now())
+  id        Int           @id @default(autoincrement())
+  startup   Startup?      @relation(fields: [startupId], references: [id])
+  startupId Int?
+  type      AnalyticsType
+  data      Json // Can store complex data like aggregated metrics, graphs, etc.
+  createdAt DateTime      @default(now())
 }
 
+// Enum for Analytics Type
 enum AnalyticsType {
   PROJECT
   STARTUP
   IPR
   RESOURCE
+  METRIC
+}
+
+// Funding model
+model Funding {
+  id            Int      @id @default(autoincrement())
+  amount        Float
+  project       Project? @relation(fields: [projectId], references: [id])
+  projectId     Int?
+  startup       Startup? @relation(fields: [startupId], references: [id])
+  startupId     Int?
+  fundingBody   User     @relation(fields: [fundingBodyId], references: [id])
+  fundingBodyId Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

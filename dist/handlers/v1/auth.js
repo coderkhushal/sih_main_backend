@@ -21,12 +21,20 @@ const DbManager_js_1 = require("../../utils/DbManager.js");
 const prisma = DbManager_js_1.DbManager.getInstance().getClient();
 const handlesignup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { name, email, password, role } = req.body;
-    if (!name || !email || !password || role) {
+    if (!name || !email || !password || !role) {
         return res.status(400).json({ message: "All fields are required" });
     }
     try {
         let salt = bcryptjs_1.default.genSaltSync(10);
         password = yield bcryptjs_1.default.hash(password, salt);
+        let existingUser = yield prisma.user.findUnique({
+            where: {
+                email
+            }
+        });
+        if (existingUser) {
+            return res.status(400).json({ message: "User already exists" });
+        }
         let user = yield prisma.user.create({
             data: {
                 name,
@@ -37,7 +45,7 @@ const handlesignup = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
         let token = jsonwebtoken_1.default.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
         res.cookie("token", token);
-        res.json({ success: true, message: "Created Successfully", token: token });
+        res.json({ success: true, message: "Created Successfully", token: token, user: { id: user.id, role: user.role } });
     }
     catch (er) {
         console.log(er);
@@ -65,7 +73,7 @@ const handleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         let token = jsonwebtoken_1.default.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
         res.cookie("token", token);
-        res.json({ success: true, message: "Logged In Successfully", token: token });
+        res.json({ success: true, message: "Logged In Successfully", token: token, user: { id: user.id, role: user.role } });
     }
     catch (er) {
         console.log(er);
