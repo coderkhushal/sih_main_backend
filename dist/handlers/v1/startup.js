@@ -136,9 +136,9 @@ const handleDeleteStartup = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.handleDeleteStartup = handleDeleteStartup;
 const handleCreateStartupMetrics = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { startupId, revenue, period, profit, expenses, valuation, equity, employees, customers, churnRate, burnRate, runway, cac } = req.body;
-        if (!startupId || !revenue || !profit || !expenses || !valuation || !period) {
-            res.status(400).json({ "message": "startupId, revenue, profit, expenses, valuation and period are required" });
+        let { startupId, period, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway } = req.body;
+        if (!startupId) {
+            return res.status(400).json({ "message": "startupId not found" });
         }
         let startup = yield prisma.startup.findUnique({
             where: {
@@ -158,18 +158,7 @@ const handleCreateStartupMetrics = (req, res) => __awaiter(void 0, void 0, void 
         perioddatetime.setHours(0, 0, 0, 0);
         let metrics = yield prisma.metrics.create({
             data: {
-                revenue,
-                profit,
-                expenses,
-                valuation,
-                period: perioddatetime,
-                equity,
-                employees,
-                customers,
-                churnRate,
-                burnRate,
-                runway,
-                cac,
+                period: perioddatetime, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway,
                 startup: {
                     connect: {
                         id: startupId
@@ -187,7 +176,7 @@ const handleCreateStartupMetrics = (req, res) => __awaiter(void 0, void 0, void 
 exports.handleCreateStartupMetrics = handleCreateStartupMetrics;
 const handleUpdateStartupMetrics = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { metricsId, revenue, period, profit, expenses, valuation, equity, employees, customers, churnRate, burnRate, runway, cac } = req.body;
+        let { metricsId, period, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway, createdAt, updatedAt } = req.body;
         if (!metricsId) {
             return res.status(400).json({ message: "Metrics Id is required" });
         }
@@ -223,18 +212,7 @@ const handleUpdateStartupMetrics = (req, res) => __awaiter(void 0, void 0, void 
                 id: metricsId
             },
             data: {
-                revenue,
-                profit,
-                expenses,
-                valuation,
-                period: perioddatetime,
-                equity,
-                employees,
-                customers,
-                churnRate,
-                burnRate,
-                runway,
-                cac,
+                period: perioddatetime, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway, createdAt, updatedAt
             }
         });
         return res.status(200).json({ success: true, message: "Metrics updated successfully" });

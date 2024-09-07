@@ -90,6 +90,7 @@ model Startup {
   founder     User      @relation(fields: [founderId], references: [id])
   founderId   Int
   foundedAt   String
+    
   teamSize    Int
   location    String
   industry    String
@@ -155,10 +156,20 @@ model Metrics {
   startup   Startup  @relation(fields: [startupId], references: [id])
   startupId Int
   period    DateTime // e.g., 'Q1-2024', 'Jan-2024'
-  revenue   Float
-  profit    Float
-  expenses  Float
-  valuation Float
+  retention_rate Float?
+  mrr_growth Float?
+  itv_cac_ratio Float?
+  nps_score Float?
+  conversion_rate Float?
+  revenue   Float?
+  expenses  Float?
+  valuation Float?
+  net_profit    Float?
+  gross_profit    Float?
+  gross_margin Float?
+  founders_equity Int?
+  investors_equity Int?
+  employees_equity Int?
   customers Int?
   employees Int?
   churnRate Float?
