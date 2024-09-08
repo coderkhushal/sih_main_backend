@@ -6,17 +6,17 @@ const prisma = DbManager.getInstance().getClient()
 const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"]
 export const handleGetStartupsIndustrywise = async (req: Request, res: Response) => {
     try {
-        let { industry } = req.params
-        if (!industry) {
-            return res.status(400).json({ msg: "Industry is required" })
+        let { page, industry } = req.query
+        if (!industry || !page) {
+            return res.status(400).json({ msg: "Industry and page is required" })
         }
         
-        if(industries.includes(industry.toUpperCase()) === false){
+        if(industries.includes(industry.toString().toUpperCase()) === false){
             return res.status(400).json({msg: "Invalid Industry"})
         }
         let startups = await prisma.startup.findMany({
             where: {
-                industry: industry.toUpperCase() as any
+                industry: industry.toString().toUpperCase() as any
             }
         })
         return res.json(startups)
@@ -26,7 +26,7 @@ export const handleGetStartupsIndustrywise = async (req: Request, res: Response)
         return res.status(500).json({ msg: "Internal Server Error" })
     }
 }
-export const handleRequestMeeting = async(req: Request, res: Response) => {
+export const handlecreateMeetingRequest = async(req: Request, res: Response) => {
     try{
         const {startupId, datetime, duration } = req.body
         if(!startupId ){
@@ -40,6 +40,19 @@ export const handleRequestMeeting = async(req: Request, res: Response) => {
         let date = new Date(datetime)
         if(date.toString() === "Invalid Date"){
             return res.status(400).json({msg: "Invalid Date"})
+        }
+        let overlappingMeetingrequests = await prisma.meetingRequst.findMany({
+            where:{
+                startupId,
+                date:{
+                    gte: date,
+                    lt: new Date(date.getTime() + duration*60000)
+                },
+                
+            }
+        })
+        if(overlappingMeetingrequests.length > 0){
+            return res.status(400).json({msg: "Some other meeting already scheduled at this time"})
         }
         let meetingrequest= await prisma.meetingRequst.create({
             data:{
@@ -78,58 +91,44 @@ export const handleGetInvestorMeetingRequests= async(req: Request, res: Response
     }
 }
 
-export const handleGetStartupMeetingRequests= async(req: Request, res: Response) => {
-
+export const handleGetInvestorMeetings = async(req : Request, res: Response) => {
     try{
-        let {startupId} = req.body
-        if(!startupId){
-            return res.status(400).json({msg: "Startup Id is required"})
-        }
-        let meetingrequests = await prisma.meetingRequst.findMany({
+        let meetings = await prisma.meeting.findMany({
             where:{
-                startupId: startupId
-            },
-            orderBy:{
-                status: "asc"
+                investorId: req.body.user.id
             }
         })
-        return res.json(meetingrequests)
+        return res.json(meetings)
     }
     catch(err){
         console.log(err)
         return res.status(500).json({msg: "Internal Server Error"})
     }
 }
-
-
-export const handleUpdateMeetingRequest = async(req: Request, res: Response) => {
+export const handleDeleteMeetingRequest = async(req: Request, res: Response) => {
     try{
-        const {meetingRequestId, status, remarks} = req.body
-        if(!meetingRequestId || !status){
-            return res.status(400).json({msg: "MeetingRequestId and status is required"})
+        let {meetingRequestId} = req.body
+        if(!meetingRequestId){
+            return res.status(400).json({msg: "Meeting Request Id is required"})
         }
-        let meetingrequest = await prisma.meetingRequst.update({
+        let meetingrequest = await prisma.meetingRequst.findUnique({
             where:{
                 id: meetingRequestId
-            },
-            data:{
-                status,
-                remarks
             }
         })
-        
-        let meeting = await prisma.meeting.create({
-            data:{
-                date: meetingrequest.date,
-                duration: meetingrequest.duration,
-                link:"http://meet.google.com",
-                startupId: meetingrequest.startupId,
-                investorId: meetingrequest.investorId  ,
-                notes:remarks ,
-                meetingRequestId: meetingRequestId
+        if(!meetingrequest){
+            return res.status(400).json({msg: "Meeting Request not found"})
+        }
+        if(meetingrequest.investorId !== req.body.user.id){
+            return res.status(400).json({msg: "Unauthorized"})
+        }
+        // logic to turn zoom meeting off
+        await prisma.meetingRequst.delete({
+            where:{
+                id: meetingRequestId
             }
         })
-        return res.json({msg: "Updated Successfully"})
+        return res.json({msg: "Deleted Successfully"})
     }
     catch(err){
         console.log(err)

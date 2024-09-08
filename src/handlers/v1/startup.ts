@@ -289,3 +289,69 @@ export const handleGetStartupMetrics = async(req: Request, res: Response)=>{
         return res.status(500).json({message: "Internal Server Error"})
     }
 }
+
+
+export const handleGetStartupMeetingRequests= async(req: Request, res: Response) => {
+
+    try{
+        let {startupId} = req.body
+        if(!startupId){
+            return res.status(400).json({msg: "Startup Id is required"})
+        }
+        let meetingrequests = await prisma.meetingRequst.findMany({
+            where:{
+                startupId: startupId
+            },
+            orderBy:{
+                status: "asc"
+            }
+        })
+        return res.json(meetingrequests)
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({msg: "Internal Server Error"})
+    }
+}
+
+
+export const handleUpdateMeetingRequest = async(req: Request, res: Response) => {
+    try{
+        const {meetingRequestId, status, remarks} = req.body
+        if(!meetingRequestId || !status){
+            return res.status(400).json({msg: "MeetingRequestId and status is required"})
+        }
+        if(status=="PENDING" ){
+            return res.status(400).json({msg: "Invalid Status"})
+        }
+        let meetingrequest = await prisma.meetingRequst.update({
+            where:{
+                id: meetingRequestId
+            },
+            data:{
+                status,
+                remarks
+            }
+        })
+       if(status=="ACCEPTED"){
+
+           let meeting = await prisma.meeting.create({
+               data:{
+                   date: meetingrequest.date,
+                   duration: meetingrequest.duration,
+                   link:"http://meet.google.com",
+                   startupId: meetingrequest.startupId,
+                   investorId: meetingrequest.investorId  ,
+                   notes:remarks ,
+                   meetingRequestId: meetingRequestId
+                }
+            })
+        } 
+        return res.json({msg: "Updated Successfully"})
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({msg: "Internal Server Error"})
+    }
+}
+
