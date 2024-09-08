@@ -11,12 +11,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleCreateStartup = void 0;
 const DbManager_1 = require("../../utils/DbManager");
+const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"];
 const prisma = DbManager_1.DbManager.getInstance().getClient();
 const handleCreateStartup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let { name, description, location, industry, funding, website, foundedAt, teamSize } = req.body;
         if (!name || !description || !location || !industry || !funding || !website || !foundedAt || !teamSize) {
             return res.status(400).json({ message: "All fields are required" });
+        }
+        if (industries.includes(industry.toUpperCase()) === false) {
+            return res.status(400).json({ message: "Invalid Industry" });
         }
         if (req.body.user.role.includes("ENTERPRENEUR") === false) {
             return res.status(400).json({ message: "You must be a entrepreneur to create a startup" });
@@ -38,7 +42,7 @@ const handleCreateStartup = (req, res) => __awaiter(void 0, void 0, void 0, func
                 }
             }
         });
-        return res.status(200).json({ message: "Startup created successfully" });
+        return res.status(200).json({ message: "Startup created successfully", startupId: startup.id });
     }
     catch (err) {
         console.log(err);

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleSubmitGrantApplication = exports.handleAssignGrant = exports.handleGetGrants = exports.handleDeleteGrant = exports.handleUpdateGrant = exports.handleCreateGrant = void 0;
+exports.handleDeleteGrantApplication = exports.handleSubmitGrantApplication = exports.handleAssignGrant = exports.handleGetApplications = exports.handleGetGrants = exports.handleDeleteGrant = exports.handleUpdateGrant = exports.handleCreateGrant = void 0;
 const DbManager_1 = require("../../utils/DbManager");
 const prisma = DbManager_1.DbManager.getInstance().getClient();
 const handleCreateGrant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -147,6 +147,37 @@ const handleGetGrants = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.handleGetGrants = handleGetGrants;
+const handleGetApplications = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { grantId } = req.body;
+        console.log(grantId);
+        if (!grantId) {
+            return res.status(400).json({ msg: "Grant Id is required" });
+        }
+        if (!req.body.user.role.includes("GOVERNMENT")) {
+            return res.status(401).json({ msg: "Unauthorized" });
+        }
+        let existinggrant = yield prisma.grant.findUnique({
+            where: {
+                id: grantId
+            }
+        });
+        if (!existinggrant) {
+            return res.status(400).json({ msg: "Grant does not exist" });
+        }
+        let applications = yield prisma.grantApplication.findMany({
+            where: {
+                grantId
+            }
+        });
+        return res.json({ applications });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleGetApplications = handleGetApplications;
 const handleAssignGrant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { grantId, startupId } = req.body;
@@ -221,13 +252,20 @@ const handleAssignGrant = (req, res) => __awaiter(void 0, void 0, void 0, functi
 exports.handleAssignGrant = handleAssignGrant;
 const handleSubmitGrantApplication = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { grantId, startupId } = req.body;
-        if (!grantId || !startupId) {
+        const { grantId, startupId, pitch } = req.body;
+        if (!grantId || !pitch || !startupId) {
             return res.status(400).json({ msg: "Grant Id and Startup Id are required" });
         }
         let existinggrant = yield prisma.grant.findUnique({
             where: {
                 id: grantId
+            },
+            include: {
+                applications: {
+                    where: {
+                        startupId
+                    }
+                }
             }
         });
         if (!existinggrant) {
@@ -235,6 +273,9 @@ const handleSubmitGrantApplication = (req, res) => __awaiter(void 0, void 0, voi
         }
         if (existinggrant.isAssigned) {
             return res.status(400).json({ msg: "Grant is already assigned" });
+        }
+        if (existinggrant.applications.length > 0) {
+            return res.status(400).json({ msg: "Startup has already applied for this grant" });
         }
         let existingStartup = yield prisma.startup.findUnique({
             where: {
@@ -254,6 +295,7 @@ const handleSubmitGrantApplication = (req, res) => __awaiter(void 0, void 0, voi
                         id: grantId
                     }
                 },
+                pitch: pitch,
                 startup: {
                     connect: {
                         id: startupId
@@ -269,3 +311,41 @@ const handleSubmitGrantApplication = (req, res) => __awaiter(void 0, void 0, voi
     }
 });
 exports.handleSubmitGrantApplication = handleSubmitGrantApplication;
+const handleDeleteGrantApplication = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { applicationId, startupId } = req.body;
+        if (!applicationId) {
+            return res.status(400).json({ msg: "Application Id is required" });
+        }
+        let existingapplication = yield prisma.grantApplication.findUnique({
+            where: {
+                id: applicationId
+            },
+            include: {
+                startup: {
+                    select: {
+                        founderId: true
+                    }
+                }
+            }
+        });
+        if (!existingapplication) {
+            return res.status(400).json({ msg: "Application does not exist" });
+        }
+        if (((_a = existingapplication.startup) === null || _a === void 0 ? void 0 : _a.founderId) !== req.body.user.id) {
+            return res.status(400).json({ msg: "Unauthorized" });
+        }
+        yield prisma.grantApplication.delete({
+            where: {
+                id: applicationId
+            }
+        });
+        return res.json({ msg: "Deleted Successfully" });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleDeleteGrantApplication = handleDeleteGrantApplication;

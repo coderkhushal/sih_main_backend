@@ -128,6 +128,7 @@ export const handleDeleteGrant = async(req: Request, res: Response) => {
         return res.status(500).json({msg: "Internal Server Error"})
     }
 }
+
 export const handleGetGrants = async(req: Request, res: Response) => {
     try{
 
@@ -147,6 +148,39 @@ export const handleGetGrants = async(req: Request, res: Response) => {
     }
 }
 
+export const handleGetApplications = async(req: Request, res: Response) => {
+    try{
+        const {grantId} = req.body
+        console.log(grantId)
+        if(!grantId){
+            return res.status(400).json({msg: "Grant Id is required"})
+        }
+
+        if(!req.body.user.role.includes("GOVERNMENT")){
+            return res.status(401).json({msg: "Unauthorized"})
+        }
+
+        let existinggrant = await prisma.grant.findUnique({
+            where:{
+                id: grantId
+            }
+        })
+        if(!existinggrant){
+            return res.status(400).json({msg: "Grant does not exist"})
+        }
+        let applications = await prisma.grantApplication.findMany({
+            where:{
+                grantId
+            }
+        })
+        return res.json({applications})
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({msg: "Internal Server Error"})
+    }
+}
+    
 export const handleAssignGrant = async(req: Request, res: Response) => {
     try{
         const {grantId, startupId} = req.body
@@ -229,15 +263,22 @@ export const handleAssignGrant = async(req: Request, res: Response) => {
 
 export const handleSubmitGrantApplication = async(req: Request, res: Response) => {
     try{
-        const {grantId,startupId} = req.body
+        const {grantId,startupId, pitch} = req.body
         
-        if(!grantId || !startupId){
+        if(!grantId || !pitch || !startupId){
             return res.status(400).json({msg: "Grant Id and Startup Id are required"})
         }
 
         let existinggrant = await prisma.grant.findUnique({
             where:{
                 id: grantId
+            },
+            include:{
+                applications:{
+                    where:{
+                        startupId
+                    }
+                }
             }
         })
         if(!existinggrant){
@@ -245,6 +286,9 @@ export const handleSubmitGrantApplication = async(req: Request, res: Response) =
         }
         if(existinggrant.isAssigned){
             return res.status(400).json({msg: "Grant is already assigned"})
+        }
+        if(existinggrant.applications.length>0){
+            return res.status(400).json({msg: "Startup has already applied for this grant"})
         }
         let existingStartup = await prisma.startup.findUnique({
             where:{
@@ -265,6 +309,7 @@ export const handleSubmitGrantApplication = async(req: Request, res: Response) =
                         id: grantId
                     }
                 },
+                pitch:pitch, 
                 startup:{
                     connect:{
                         id: startupId
@@ -275,6 +320,47 @@ export const handleSubmitGrantApplication = async(req: Request, res: Response) =
             })
             
             return res.json({msg: "Application Submitted Successfully"})
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({msg: "Internal Server Error"})
+    }
+
+}
+export const handleDeleteGrantApplication = async(req: Request, res: Response) => {
+    try{
+        const {applicationId, startupId} = req.body
+        
+        if(!applicationId){
+            return res.status(400).json({msg: "Application Id is required"})
+        }
+
+        let existingapplication = await prisma.grantApplication.findUnique({
+            where:{
+                id: applicationId
+            },
+            include:{
+                startup:{
+                    select:{
+                        founderId: true
+                    }
+                }
+            }
+        })
+
+        if(!existingapplication){
+            return res.status(400).json({msg: "Application does not exist"})
+        }
+        
+        if(existingapplication.startup?.founderId !== req.body.user.id){
+            return res.status(400).json({msg: "Unauthorized"})
+        }
+        await prisma.grantApplication.delete({
+            where:{
+                id: applicationId
+            }
+        })
+        return res.json({msg: "Deleted Successfully"})
     }
     catch(err){
         console.log(err)

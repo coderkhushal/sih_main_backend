@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { DbManager } from "../../utils/DbManager";
 
+const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"]
 const prisma = DbManager.getInstance().getClient()
 
 export const handleCreateStartup = async(req: Request, res: Response)=>{
@@ -8,6 +9,9 @@ export const handleCreateStartup = async(req: Request, res: Response)=>{
         let{name, description, location, industry ,funding, website , foundedAt, teamSize} = req.body
         if(!name || !description || !location || !industry || !funding || !website || !foundedAt || !teamSize){
             return res.status(400).json({message: "All fields are required"})
+        }
+        if(industries.includes(industry.toUpperCase()) === false){
+            return res.status(400).json({message: "Invalid Industry"})
         }
         if(req.body.user.role.includes("ENTERPRENEUR") === false){
             return res.status(400).json({message: "You must be a entrepreneur to create a startup"})

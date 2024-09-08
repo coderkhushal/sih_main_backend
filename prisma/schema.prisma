@@ -254,6 +254,7 @@ model GrantApplication{
   grantId Int
   startup Startup? @relation(fields: [startupId], references: [id])
   startupId Int?
+  pitch String
   project Project? @relation(fields: [projectId], references: [id])
   projectId Int?
 }
@@ -290,24 +291,35 @@ model Meeting{
   investorId Int
   startup Startup @relation(fields: [startupId], references: [id])
   startupId Int
-  startupName String
+
   date DateTime
+  duration Int // in minutes
   link String
   notes String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+ meetingrequest MeetingRequst @relation(fields: [meetingRequestId], references: [id])
+  meetingRequestId Int @unique
+
 }
 
 model MeetingRequst{
+  // investor would request startup to have a meet 
+
   id Int @id @default(autoincrement())
   investor Investor @relation(fields: [investorId], references: [id])
   investorId Int
   
    startup Startup @relation(fields: [startupId], references: [id])
   startupId Int
-  startupName String
+  meeting Meeting?
   date DateTime
+  duration Int // in minutes
   status IPRStatus 
+  read Boolean @default(false)
+  remarks String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+

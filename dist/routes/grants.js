@@ -11,6 +11,7 @@ router.post("/create", authmiddleware_1.AuthMiddleware, grants_1.handleCreateGra
 router.post("/update", authmiddleware_1.AuthMiddleware, grants_1.handleUpdateGrant);
 router.post("/delete", authmiddleware_1.AuthMiddleware, grants_1.handleDeleteGrant);
 router.post("/", authmiddleware_1.AuthMiddleware, grants_1.handleGetGrants);
+router.post("/getApplications", authmiddleware_1.AuthMiddleware, grants_1.handleGetApplications);
 router.post("/assign", authmiddleware_1.AuthMiddleware, grants_1.handleAssignGrant);
 router.post("/submitApplication", authmiddleware_1.AuthMiddleware, grants_1.handleSubmitGrantApplication);
 // router.post("/getAnalytics", handleGetStartupMetrics)
