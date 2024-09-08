@@ -171,6 +171,9 @@ const handleAssignGrant = (req, res) => __awaiter(void 0, void 0, void 0, functi
         if (!existinggrant) {
             return res.status(400).json({ msg: "Grant does not exist" });
         }
+        if (existinggrant.isAssigned) {
+            return res.status(400).json({ msg: "Grant is already assigned" });
+        }
         if (existinggrant.applications.length == 0) {
             return res.status(400).json({ msg: "Startup has not applied for this grant" });
         }
@@ -194,6 +197,18 @@ const handleAssignGrant = (req, res) => __awaiter(void 0, void 0, void 0, functi
                         id: startupId
                     }
                 }
+            }
+        });
+        yield prisma.startup.update({
+            where: {
+                id: startupId
+            },
+            data: {
+                grants: {
+                    connect: {
+                        id: grantId
+                    }
+                },
             }
         });
         return res.json({ msg: "Assigned Successfully" });

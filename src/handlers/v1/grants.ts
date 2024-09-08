@@ -174,9 +174,13 @@ export const handleAssignGrant = async(req: Request, res: Response) => {
         if(!existinggrant){
             return res.status(400).json({msg: "Grant does not exist"})
         }
+        if(existinggrant.isAssigned){
+            return res.status(400).json({msg: "Grant is already assigned"})
+        }
         if(existinggrant.applications.length==0){
             return res.status(400).json({msg: "Startup has not applied for this grant"})
         }
+        
         let existingStartup = await prisma.startup.findUnique({
             where:{
                 id: startupId
@@ -185,6 +189,7 @@ export const handleAssignGrant = async(req: Request, res: Response) => {
         if(!existingStartup){
             return res.status(400).json({msg: "Startup does not exist"})
         }
+        
         let grant = await prisma.grant.update({
             where:{
                 id: grantId
@@ -197,6 +202,19 @@ export const handleAssignGrant = async(req: Request, res: Response) => {
                         id: startupId
                     }
                 }
+            }
+        })
+        await prisma.startup.update({
+            where:{
+                id: startupId
+            },
+            data:{
+                grants:{
+                    connect:{
+                        id: grantId
+                    }
+                },
+
             }
         })
         return res.json({msg: "Assigned Successfully"})

@@ -29,7 +29,7 @@ export const handleCreateStartup = async(req: Request, res: Response)=>{
                 }
             }
         })
-        return res.status(200).json({message: "Startup created successfully"})
+        return res.status(200).json({message: "Startup created successfully", startupId: startup.id})
     }
     catch(err){
         console.log(err)
