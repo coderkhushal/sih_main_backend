@@ -138,6 +138,9 @@ export const handleGetGrants = async(req: Request, res: Response) => {
         let grants = await prisma.grant.findMany({
             where :{
                 fundingBodyId: req.body.user.id
+            },
+            orderBy:{
+                isAssigned:"asc"
             }
         })
         return res.json({grants})

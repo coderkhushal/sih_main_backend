@@ -137,6 +137,9 @@ const handleGetGrants = (req, res) => __awaiter(void 0, void 0, void 0, function
         let grants = yield prisma.grant.findMany({
             where: {
                 fundingBodyId: req.body.user.id
+            },
+            orderBy: {
+                isAssigned: "asc"
             }
         });
         return res.json({ grants });

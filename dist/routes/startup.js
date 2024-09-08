@@ -12,6 +12,8 @@ router.post("/create", authmiddleware_1.AuthMiddleware, startup_1.handleCreateSt
 router.post("/update", authmiddleware_1.AuthMiddleware, startup_1.handleUpdateStartup);
 router.post("/delete", authmiddleware_1.AuthMiddleware, startup_1.handleDeleteStartup);
 router.get("/", authmiddleware_1.AuthMiddleware, startup_1.handleGetUserStartups);
+router.get("/grants", authmiddleware_1.AuthMiddleware, startup_1.handleGetAllGrants);
+router.get("/:id", authmiddleware_1.AuthMiddleware, startup_1.handleGetSingleStartupInfo);
 router.post("/metrics/create", authmiddleware_1.AuthMiddleware, startup_1.handleCreateStartupMetrics);
 router.post("/metrics/update", authmiddleware_1.AuthMiddleware, startup_1.handleUpdateStartupMetrics);
 router.post("/metrics/delete", authmiddleware_1.AuthMiddleware, startup_1.handleDeleteStartupMetrics);

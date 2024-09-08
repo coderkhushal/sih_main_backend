@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleUpdateMeetingRequest = exports.handleGetStartupMeetingRequests = exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleCreateStartup = void 0;
+exports.handleGetAllGrants = exports.handleUpdateMeetingRequest = exports.handleGetStartupMeetingRequests = exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleGetSingleStartupInfo = exports.handleCreateStartup = void 0;
 const DbManager_1 = require("../../utils/DbManager");
 const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"];
 const prisma = DbManager_1.DbManager.getInstance().getClient();
@@ -50,6 +50,28 @@ const handleCreateStartup = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.handleCreateStartup = handleCreateStartup;
+const handleGetSingleStartupInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ message: "Startup Id is required" });
+        }
+        let startup = yield prisma.startup.findUnique({
+            where: {
+                id: Number.parseInt(id)
+            }
+        });
+        if (!startup) {
+            return res.status(400).json({ message: "Startup not found" });
+        }
+        return res.status(200).json({ startup });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+exports.handleGetSingleStartupInfo = handleGetSingleStartupInfo;
 const handleGetUserStartups = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let startups = yield prisma.startup.findMany({
@@ -373,3 +395,18 @@ const handleUpdateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.handleUpdateMeetingRequest = handleUpdateMeetingRequest;
+const handleGetAllGrants = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let grants = yield prisma.grant.findMany({
+            orderBy: {
+                isAssigned: "asc"
+            }
+        });
+        return res.json(grants);
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleGetAllGrants = handleGetAllGrants;

@@ -1,7 +1,7 @@
 import express from "express"
 
 import { AuthMiddleware } from "../middleware/authmiddleware"
-import { handleCreateStartup, handleCreateStartupMetrics, handleDeleteStartup, handleDeleteStartupMetrics, handleGetStartupMeetingRequests, handleGetStartupMetrics, handleGetUserStartups, handleUpdateMeetingRequest, handleUpdateStartup, handleUpdateStartupMetrics } from "../handlers/v1/startup"
+import { handleCreateStartup, handleCreateStartupMetrics, handleDeleteStartup, handleDeleteStartupMetrics, handleGetAllGrants, handleGetSingleStartupInfo, handleGetStartupMeetingRequests, handleGetStartupMetrics, handleGetUserStartups, handleUpdateMeetingRequest, handleUpdateStartup, handleUpdateStartupMetrics } from "../handlers/v1/startup"
 import { handleGetStartupInvestmentOffers, handleUpdateStartupInvestmentOffer } from "../handlers/v1/offers"
 const router = express.Router()
 
@@ -9,6 +9,8 @@ router.post("/create", AuthMiddleware , handleCreateStartup)
 router.post("/update" , AuthMiddleware , handleUpdateStartup) 
 router.post("/delete", AuthMiddleware , handleDeleteStartup)
 router.get("/",AuthMiddleware, handleGetUserStartups)
+router.get("/grants", AuthMiddleware, handleGetAllGrants)
+router.get("/:id", AuthMiddleware, handleGetSingleStartupInfo)
 router.post("/metrics/create", AuthMiddleware , handleCreateStartupMetrics)
 router.post("/metrics/update", AuthMiddleware , handleUpdateStartupMetrics )
 router.post("/metrics/delete", AuthMiddleware , handleDeleteStartupMetrics)

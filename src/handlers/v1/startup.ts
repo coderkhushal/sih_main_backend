@@ -40,6 +40,28 @@ export const handleCreateStartup = async(req: Request, res: Response)=>{
         return res.status(500).json({message: "Internal Server Error"})
     }
 }
+export const handleGetSingleStartupInfo = async(req: Request, res: Response)=>{
+    try{
+        let {id} = req.params
+        if(!id){
+            return res.status(400).json({message: "Startup Id is required"})
+        }
+        let startup = await prisma.startup.findUnique({
+            where:{
+                id:Number.parseInt(id)
+            }
+        })
+        if(!startup){
+            return res.status(400).json({message: "Startup not found"})
+        }
+        return res.status(200).json({startup})
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({message: "Internal Server Error"})
+    }
+}
+
 export const handleGetUserStartups = async(req: Request, res: Response)=>{
     try{
         let startups = await prisma.startup.findMany({
@@ -374,3 +396,17 @@ export const handleUpdateMeetingRequest = async(req: Request, res: Response) => 
     }
 }
 
+export const handleGetAllGrants = async(req: Request, res: Response) => {
+    try{
+        let grants = await prisma.grant.findMany({
+            orderBy:{
+                isAssigned: "asc"
+            }
+        })
+        return res.json(grants)
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({msg: "Internal Server Error"})
+    }
+}
