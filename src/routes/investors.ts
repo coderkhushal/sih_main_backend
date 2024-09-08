@@ -3,16 +3,19 @@
 import express from "express"
 
 import { AuthMiddleware } from "../middleware/authmiddleware"
+import { handleGetInvestorMeetingRequests, handleGetStartupsIndustrywise, handlecreateMeetingRequest } from "../handlers/v1/investors"
+import { handleGetInvestorInvestmentOffers, handleUpdateInvestorInvestmentOffer } from "../handlers/v1/offers"
 const router = express.Router()
 
-// router.post("/showStartups?page=1&industry=HEALTH", AuthMiddleware , )
-// router.post("/requestMeeting" , AuthMiddleware , handleupdatePatent) 
-// router.post("/deteMeeting", AuthMiddleware , handleDeletePatent)
-// router.post("/getMeeting", handleGetPatents)
-// router.post("/InvestRequest", AuthMiddleware, handleupdatePatentStatus)
-// router.post("/showMeetingRequests", AuthMiddleware, handleGetPatentPdfUploadingUrl)
+router.post("/showStartups", AuthMiddleware ,handleGetStartupsIndustrywise )
+router.post("/createMeetingRequest" , AuthMiddleware , handlecreateMeetingRequest) 
+router.get("/getMeetingRequests", AuthMiddleware ,handleGetInvestorMeetingRequests)
+router.post("/getMeetings",AuthMiddleware, handleGetInvestorMeetingRequests)
+router.post("/deleteMeetingRequest", AuthMiddleware, handleGetInvestorMeetingRequests)
+router.get("/investmentOffers", AuthMiddleware, handleGetInvestorInvestmentOffers)
+router.post("/investmentOffers/update", AuthMiddleware, handleUpdateInvestorInvestmentOffer)
+router.post("/investmentOffers/delete", AuthMiddleware, handleUpdateInvestorInvestmentOffer)
 
-// router.post("/getAnalytics", handleGetStartupMetrics)
 
 
 module.exports = router

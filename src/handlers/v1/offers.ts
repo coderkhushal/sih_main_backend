@@ -2,7 +2,7 @@ import { DbManager } from "../../utils/DbManager"
 
 const prisma = DbManager.getInstance().getClient()
 import { Request, Response } from "express";
-export const handleCreatInvestmentOffer = async (req: Request, res: Response) => {
+export const handleCreateInvestmentOffer = async (req: Request, res: Response) => {
     try {
         const { startupId, amount, equity } = req.body
         if (!startupId || !amount || !equity) {
@@ -116,9 +116,10 @@ export const handleDeleteInvestorInvestmentOffer = async (req: Request, res: Res
 // startup
 export const handleGetStartupInvestmentOffers = async (req: Request, res: Response) => {
     try {
+        let {startupId} = req.body
         let investmentoffers = await prisma.investmentoffer.findMany({
             where: {
-                startupId: req.body.user.id
+                startupId:startupId
             },
             orderBy:{
                 status: "asc"

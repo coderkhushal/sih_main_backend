@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleCreateStartup = void 0;
+exports.handleUpdateMeetingRequest = exports.handleGetStartupMeetingRequests = exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleCreateStartup = void 0;
 const DbManager_1 = require("../../utils/DbManager");
 const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"];
 const prisma = DbManager_1.DbManager.getInstance().getClient();
@@ -295,3 +295,64 @@ const handleGetStartupMetrics = (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.handleGetStartupMetrics = handleGetStartupMetrics;
+const handleGetStartupMeetingRequests = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let { startupId } = req.body;
+        if (!startupId) {
+            return res.status(400).json({ msg: "Startup Id is required" });
+        }
+        let meetingrequests = yield prisma.meetingRequst.findMany({
+            where: {
+                startupId: startupId
+            },
+            orderBy: {
+                status: "asc"
+            }
+        });
+        return res.json(meetingrequests);
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleGetStartupMeetingRequests = handleGetStartupMeetingRequests;
+const handleUpdateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { meetingRequestId, status, remarks } = req.body;
+        if (!meetingRequestId || !status) {
+            return res.status(400).json({ msg: "MeetingRequestId and status is required" });
+        }
+        if (status == "PENDING") {
+            return res.status(400).json({ msg: "Invalid Status" });
+        }
+        let meetingrequest = yield prisma.meetingRequst.update({
+            where: {
+                id: meetingRequestId
+            },
+            data: {
+                status,
+                remarks
+            }
+        });
+        if (status == "ACCEPTED") {
+            let meeting = yield prisma.meeting.create({
+                data: {
+                    date: meetingrequest.date,
+                    duration: meetingrequest.duration,
+                    link: "http://meet.google.com",
+                    startupId: meetingrequest.startupId,
+                    investorId: meetingrequest.investorId,
+                    notes: remarks,
+                    meetingRequestId: meetingRequestId
+                }
+            });
+        }
+        return res.json({ msg: "Updated Successfully" });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleUpdateMeetingRequest = handleUpdateMeetingRequest;

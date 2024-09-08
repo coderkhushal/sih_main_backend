@@ -22,6 +22,8 @@ app.use("/auth", require("./routes/auth"));
 app.use("/startup", require("./routes/startup"));
 app.use("/patent", require("./routes/patents"));
 app.use("/grants", require("./routes/grants"));
+app.use("/investor", require("./routes/investors"));
+app.use("/offers", require("./routes/offers"));
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
 });

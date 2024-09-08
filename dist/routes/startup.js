@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const authmiddleware_1 = require("../middleware/authmiddleware");
 const startup_1 = require("../handlers/v1/startup");
+const offers_1 = require("../handlers/v1/offers");
 const router = express_1.default.Router();
 router.post("/create", authmiddleware_1.AuthMiddleware, startup_1.handleCreateStartup);
 router.post("/update", authmiddleware_1.AuthMiddleware, startup_1.handleUpdateStartup);
@@ -15,5 +16,9 @@ router.post("/metrics/create", authmiddleware_1.AuthMiddleware, startup_1.handle
 router.post("/metrics/update", authmiddleware_1.AuthMiddleware, startup_1.handleUpdateStartupMetrics);
 router.post("/metrics/delete", authmiddleware_1.AuthMiddleware, startup_1.handleDeleteStartupMetrics);
 router.post("/metrics", startup_1.handleGetStartupMetrics);
+router.post("/meetings/requests", authmiddleware_1.AuthMiddleware, startup_1.handleGetStartupMeetingRequests);
+router.post("/meetings/update", authmiddleware_1.AuthMiddleware, startup_1.handleUpdateMeetingRequest);
+router.post("/investmentOffers", authmiddleware_1.AuthMiddleware, offers_1.handleGetStartupInvestmentOffers);
+router.post("/investmentOffers/update", authmiddleware_1.AuthMiddleware, offers_1.handleUpdateStartupInvestmentOffer);
 // router.post("/getAnalytics", handleGetStartupMetrics)
 module.exports = router;

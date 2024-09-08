@@ -9,23 +9,32 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleUpdateMeetingRequest = exports.handleGetMeetingRequests = exports.handleRequestMeeting = exports.handleGetStartupsIndustrywise = void 0;
+exports.handleDeleteMeetingRequest = exports.handleGetInvestorMeetings = exports.handleGetInvestorMeetingRequests = exports.handlecreateMeetingRequest = exports.handleGetStartupsIndustrywise = void 0;
 const DbManager_1 = require("../../utils/DbManager");
 const prisma = DbManager_1.DbManager.getInstance().getClient();
-const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"];
+const industries = ["ALL", "IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"];
 const handleGetStartupsIndustrywise = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { industry } = req.params;
-        if (!industry) {
-            return res.status(400).json({ msg: "Industry is required" });
+        let { page, industry } = req.params;
+        if (!industry || !page) {
+            return res.status(400).json({ msg: "Industry and page is required" });
         }
-        if (industries.includes(industry.toUpperCase()) === false) {
+        if (industries.includes(industry.toString().toUpperCase()) === false) {
             return res.status(400).json({ msg: "Invalid Industry" });
+        }
+        if (industry.toString().toUpperCase() === "ALL") {
+            let startups = yield prisma.startup.findMany({
+                skip: (parseInt(page.toString()) - 1) * 10,
+                take: 10
+            });
+            return res.json(startups);
         }
         let startups = yield prisma.startup.findMany({
             where: {
-                industry: industry.toUpperCase()
-            }
+                industry: industry.toString().toUpperCase()
+            },
+            skip: (parseInt(page.toString()) - 1) * 10,
+            take: 10
         });
         return res.json(startups);
     }
@@ -35,7 +44,7 @@ const handleGetStartupsIndustrywise = (req, res) => __awaiter(void 0, void 0, vo
     }
 });
 exports.handleGetStartupsIndustrywise = handleGetStartupsIndustrywise;
-const handleRequestMeeting = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const handlecreateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { startupId, datetime, duration } = req.body;
         if (!startupId) {
@@ -47,6 +56,18 @@ const handleRequestMeeting = (req, res) => __awaiter(void 0, void 0, void 0, fun
         let date = new Date(datetime);
         if (date.toString() === "Invalid Date") {
             return res.status(400).json({ msg: "Invalid Date" });
+        }
+        let overlappingMeetingrequests = yield prisma.meetingRequst.findMany({
+            where: {
+                startupId,
+                date: {
+                    gte: date,
+                    lt: new Date(date.getTime() + duration * 60000)
+                },
+            }
+        });
+        if (overlappingMeetingrequests.length > 0) {
+            return res.status(400).json({ msg: "Some other meeting already scheduled at this time" });
         }
         let meetingrequest = yield prisma.meetingRequst.create({
             data: {
@@ -65,8 +86,8 @@ const handleRequestMeeting = (req, res) => __awaiter(void 0, void 0, void 0, fun
         return res.status(500).json({ msg: "Internal Server Error" });
     }
 });
-exports.handleRequestMeeting = handleRequestMeeting;
-const handleGetMeetingRequests = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.handlecreateMeetingRequest = handlecreateMeetingRequest;
+const handleGetInvestorMeetingRequests = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let meetingrequests = yield prisma.meetingRequst.findMany({
             where: {
@@ -80,37 +101,50 @@ const handleGetMeetingRequests = (req, res) => __awaiter(void 0, void 0, void 0,
         return res.status(500).json({ msg: "Internal Server Error" });
     }
 });
-exports.handleGetMeetingRequests = handleGetMeetingRequests;
-const handleUpdateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.handleGetInvestorMeetingRequests = handleGetInvestorMeetingRequests;
+const handleGetInvestorMeetings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { meetingRequestId, status, remarks } = req.body;
-        if (!meetingRequestId || !status) {
-            return res.status(400).json({ msg: "MeetingRequestId and status is required" });
-        }
-        let meetingrequest = yield prisma.meetingRequst.update({
+        let meetings = yield prisma.meeting.findMany({
             where: {
-                id: meetingRequestId
-            },
-            data: {
-                status,
-                remarks
+                investorId: req.body.user.id
             }
         });
-        let meeting = yield prisma.meeting.create({
-            data: {
-                date: meetingrequest.date,
-                duration: meetingrequest.duration,
-                link: "http://meet.google.com",
-                startupId: meetingrequest.startupId,
-                investorId: meetingrequest.investorId,
-                notes: remarks
-            }
-        });
-        return res.json({ msg: "Updated Successfully" });
+        return res.json(meetings);
     }
     catch (err) {
         console.log(err);
         return res.status(500).json({ msg: "Internal Server Error" });
     }
 });
-exports.handleUpdateMeetingRequest = handleUpdateMeetingRequest;
+exports.handleGetInvestorMeetings = handleGetInvestorMeetings;
+const handleDeleteMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let { meetingRequestId } = req.body;
+        if (!meetingRequestId) {
+            return res.status(400).json({ msg: "Meeting Request Id is required" });
+        }
+        let meetingrequest = yield prisma.meetingRequst.findUnique({
+            where: {
+                id: meetingRequestId
+            }
+        });
+        if (!meetingrequest) {
+            return res.status(400).json({ msg: "Meeting Request not found" });
+        }
+        if (meetingrequest.investorId !== req.body.user.id) {
+            return res.status(400).json({ msg: "Unauthorized" });
+        }
+        // logic to turn zoom meeting off
+        yield prisma.meetingRequst.delete({
+            where: {
+                id: meetingRequestId
+            }
+        });
+        return res.json({ msg: "Deleted Successfully" });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleDeleteMeetingRequest = handleDeleteMeetingRequest;

@@ -3,10 +3,10 @@ import { DbManager } from "../../utils/DbManager";
 import { Request, Response } from "express";
 const prisma = DbManager.getInstance().getClient()
 
-const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"]
+const industries = ["ALL", "IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"]
 export const handleGetStartupsIndustrywise = async (req: Request, res: Response) => {
     try {
-        let { page, industry } = req.query
+        let { page, industry } = req.params
         if (!industry || !page) {
             return res.status(400).json({ msg: "Industry and page is required" })
         }
@@ -14,10 +14,19 @@ export const handleGetStartupsIndustrywise = async (req: Request, res: Response)
         if(industries.includes(industry.toString().toUpperCase()) === false){
             return res.status(400).json({msg: "Invalid Industry"})
         }
+        if(industry.toString().toUpperCase() === "ALL"){
+            let startups = await prisma.startup.findMany({
+                skip: (parseInt(page.toString()) - 1) * 10,
+                take: 10
+            })
+            return res.json(startups)
+        }
         let startups = await prisma.startup.findMany({
             where: {
                 industry: industry.toString().toUpperCase() as any
-            }
+            },
+            skip: (parseInt(page.toString()) - 1) * 10,
+            take: 10
         })
         return res.json(startups)
     }
