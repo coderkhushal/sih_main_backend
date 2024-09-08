@@ -6,7 +6,9 @@ const prisma = DbManager.getInstance().getClient()
 const industries = ["ALL", "IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"]
 export const handleGetStartupsIndustrywise = async (req: Request, res: Response) => {
     try {
-        let { page, industry } = req.params
+        let { page, industry } = req.query
+        
+        
         if (!industry || !page) {
             return res.status(400).json({ msg: "Industry and page is required" })
         }
@@ -65,12 +67,21 @@ export const handlecreateMeetingRequest = async(req: Request, res: Response) => 
         }
         let meetingrequest= await prisma.meetingRequst.create({
             data:{
-                startupId,
+
                 date, 
                 duration,
                 status:"PENDING",
                 remarks:"",
-                investorId: req.body.user.id
+                investor:{
+                    connect:{
+                        id: req.body.user.id
+                    }
+                },
+                startup:{
+                    connect:{
+                        id: startupId
+                    }
+                }
             }
         })        
 
@@ -132,12 +143,33 @@ export const handleDeleteMeetingRequest = async(req: Request, res: Response) => 
             return res.status(400).json({msg: "Unauthorized"})
         }
         // logic to turn zoom meeting off
+        await prisma.meeting.delete({
+            where:{
+                meetingRequestId
+            }
+        })
         await prisma.meetingRequst.delete({
             where:{
                 id: meetingRequestId
             }
         })
         return res.json({msg: "Deleted Successfully"})
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({msg: "Internal Server Error"})
+    }
+}
+
+
+export const handleGetInvestorInvestments = async(req: Request, res: Response) => {
+    try{
+        let investments = await prisma.investment.findMany({
+            where:{
+                investorId: req.body.user.id
+            }
+        })
+        return res.json(investments)
     }
     catch(err){
         console.log(err)

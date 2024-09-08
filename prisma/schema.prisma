@@ -32,9 +32,15 @@ model User {
 
   IPR IPR[]
 
+  meetings Meeting[]
+  investments Investment[]
   Collaboration Collaboration[]
 
-  Investor Investor[]
+
+
+  MeetingRequst MeetingRequst[]
+
+  Investmentoffer Investmentoffer[]
 }
 
 // Enum for User roles
@@ -261,23 +267,10 @@ model GrantApplication{
   projectId Int?
 }
 
-model Investor{
-  id Int @id @default(autoincrement())
-  user User @relation(fields: [userId], references: [id])
-  userId Int
-  meetings Meeting[]
-  investments Investment[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  MeetingRequst MeetingRequst[]
-
-  Investmentoffer Investmentoffer[]
-}
 
 model Investment{
   id Int @id @default(autoincrement())
-  investor Investor @relation(fields: [investorId], references: [id])
+  investor User @relation(fields: [investorId], references: [id])
   investorId Int
   startup Startup @relation(fields: [startupId], references: [id])
   startupId Int
@@ -291,7 +284,7 @@ model Investment{
 
 model Meeting{
   id Int @id @default(autoincrement())
-  investor Investor @relation(fields: [investorId], references: [id])
+  investor User @relation(fields: [investorId], references: [id])
   investorId Int
   startup Startup @relation(fields: [startupId], references: [id])
   startupId Int
@@ -312,7 +305,7 @@ model MeetingRequst{
   // investor would request startup to have a meet 
 
   id Int @id @default(autoincrement())
-  investor Investor @relation(fields: [investorId], references: [id])
+  investor User @relation(fields: [investorId], references: [id])
   investorId Int
   
    startup Startup @relation(fields: [startupId], references: [id])
@@ -329,7 +322,7 @@ model MeetingRequst{
 
 model Investmentoffer{
   id Int @id @default(autoincrement())
-  investor Investor @relation(fields: [investorId], references: [id])
+  investor User @relation(fields: [investorId], references: [id])
   investorId Int
   startup Startup @relation(fields: [startupId], references: [id])
   startupId Int

@@ -320,11 +320,28 @@ exports.handleGetStartupMeetingRequests = handleGetStartupMeetingRequests;
 const handleUpdateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { meetingRequestId, status, remarks } = req.body;
-        if (!meetingRequestId || !status) {
+        if (!meetingRequestId || !status || !remarks) {
             return res.status(400).json({ msg: "MeetingRequestId and status is required" });
         }
-        if (status == "PENDING") {
+        if (status == "PENDING" || (status != "APPROVED" && status != "REJECTED")) {
             return res.status(400).json({ msg: "Invalid Status" });
+        }
+        let existingmeetingrequest = yield prisma.meetingRequst.findUnique({
+            where: {
+                id: meetingRequestId
+            },
+            include: {
+                startup: true
+            }
+        });
+        if (!existingmeetingrequest) {
+            return res.status(400).json({ msg: "Meeting Request not found" });
+        }
+        if (existingmeetingrequest.status !== "PENDING") {
+            return res.status(400).json({ msg: "Meeting Request already processed" });
+        }
+        if (existingmeetingrequest.startup.founderId !== req.body.user.id) {
+            return res.status(400).json({ msg: "Unauthorized" });
         }
         let meetingrequest = yield prisma.meetingRequst.update({
             where: {
@@ -335,7 +352,7 @@ const handleUpdateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
                 remarks
             }
         });
-        if (status == "ACCEPTED") {
+        if (status.toUpperCase() == "APPROVED") {
             let meeting = yield prisma.meeting.create({
                 data: {
                     date: meetingrequest.date,

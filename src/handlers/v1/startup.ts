@@ -317,12 +317,31 @@ export const handleGetStartupMeetingRequests= async(req: Request, res: Response)
 
 export const handleUpdateMeetingRequest = async(req: Request, res: Response) => {
     try{
-        const {meetingRequestId, status, remarks} = req.body
-        if(!meetingRequestId || !status){
+        const {meetingRequestId,   status, remarks} = req.body
+        if(!meetingRequestId || !status || !remarks){
             return res.status(400).json({msg: "MeetingRequestId and status is required"})
         }
-        if(status=="PENDING" ){
+        
+        if(status=="PENDING" || (status!="APPROVED" && status!="REJECTED")){
             return res.status(400).json({msg: "Invalid Status"})
+        }
+        
+        let existingmeetingrequest = await prisma.meetingRequst.findUnique({
+            where:{
+                id: meetingRequestId
+            },
+            include:{
+                startup:true
+            }
+        })
+        if(!existingmeetingrequest){
+            return res.status(400).json({msg: "Meeting Request not found"})
+        }
+        if(existingmeetingrequest.status !== "PENDING"){
+            return res.status(400).json({msg: "Meeting Request already processed"})
+        }
+        if(existingmeetingrequest.startup.founderId !== req.body.user.id){
+            return res.status(400).json({msg: "Unauthorized"})
         }
         let meetingrequest = await prisma.meetingRequst.update({
             where:{
@@ -333,7 +352,7 @@ export const handleUpdateMeetingRequest = async(req: Request, res: Response) => 
                 remarks
             }
         })
-       if(status=="ACCEPTED"){
+       if(status.toUpperCase()=="APPROVED"){
 
            let meeting = await prisma.meeting.create({
                data:{

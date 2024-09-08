@@ -138,8 +138,12 @@ export const handleGetStartupInvestmentOffers = async (req: Request, res: Respon
 export const handleUpdateStartupInvestmentOffer = async (req: Request, res: Response) => {
     try {
         const { investmentOfferId, status , remarks} = req.body
+        console.log(investmentOfferId, status)
         if (!investmentOfferId || !status) {
             return res.status(400).json({ msg: "Investment Offer Id and status are required" })
+        }
+        if(status!="APPROVED" && status!="REJECTED"){
+            return res.status(400).json({ msg: "Invalid status" })
         }
         const exisitingOffer = await prisma.investmentoffer.findUnique({
             where: {

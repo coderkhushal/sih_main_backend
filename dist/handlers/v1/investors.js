@@ -9,13 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleDeleteMeetingRequest = exports.handleGetInvestorMeetings = exports.handleGetInvestorMeetingRequests = exports.handlecreateMeetingRequest = exports.handleGetStartupsIndustrywise = void 0;
+exports.handleGetInvestorInvestments = exports.handleDeleteMeetingRequest = exports.handleGetInvestorMeetings = exports.handleGetInvestorMeetingRequests = exports.handlecreateMeetingRequest = exports.handleGetStartupsIndustrywise = void 0;
 const DbManager_1 = require("../../utils/DbManager");
 const prisma = DbManager_1.DbManager.getInstance().getClient();
 const industries = ["ALL", "IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"];
 const handleGetStartupsIndustrywise = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { page, industry } = req.params;
+        let { page, industry } = req.query;
         if (!industry || !page) {
             return res.status(400).json({ msg: "Industry and page is required" });
         }
@@ -71,12 +71,20 @@ const handlecreateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
         }
         let meetingrequest = yield prisma.meetingRequst.create({
             data: {
-                startupId,
                 date,
                 duration,
                 status: "PENDING",
                 remarks: "",
-                investorId: req.body.user.id
+                investor: {
+                    connect: {
+                        id: req.body.user.id
+                    }
+                },
+                startup: {
+                    connect: {
+                        id: startupId
+                    }
+                }
             }
         });
         return res.json({ msg: "Meeting Requested" });
@@ -135,6 +143,11 @@ const handleDeleteMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
             return res.status(400).json({ msg: "Unauthorized" });
         }
         // logic to turn zoom meeting off
+        yield prisma.meeting.delete({
+            where: {
+                meetingRequestId
+            }
+        });
         yield prisma.meetingRequst.delete({
             where: {
                 id: meetingRequestId
@@ -148,3 +161,18 @@ const handleDeleteMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.handleDeleteMeetingRequest = handleDeleteMeetingRequest;
+const handleGetInvestorInvestments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let investments = yield prisma.investment.findMany({
+            where: {
+                investorId: req.body.user.id
+            }
+        });
+        return res.json(investments);
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleGetInvestorInvestments = handleGetInvestorInvestments;
