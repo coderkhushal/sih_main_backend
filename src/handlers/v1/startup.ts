@@ -13,7 +13,7 @@ export const handleCreateStartup = async(req: Request, res: Response)=>{
         if(industries.includes(industry.toUpperCase()) === false){
             return res.status(400).json({message: "Invalid Industry"})
         }
-        if(req.body.user.role.includes("ENTERPRENEUR") === false){
+        if(req.body.user.role.includes("ENTREPRENEUR") === false){
             return res.status(400).json({message: "You must be a entrepreneur to create a startup"})
         }
         let startup = await prisma.startup.create({
