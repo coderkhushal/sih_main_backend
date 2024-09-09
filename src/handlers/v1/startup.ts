@@ -182,7 +182,7 @@ export const handleCreateStartupMetrics = async(req: Request, res: Response)=>{
                 }
             }
         })
-        return res.status(200).json({message: "Metrics created successfully"})
+        return res.status(200).json({message: "Metrics created successfully",metricsId:metrics.id})
 
     } 
     catch(err){
