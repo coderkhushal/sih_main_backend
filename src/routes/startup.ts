@@ -1,10 +1,10 @@
 import express from "express"
 
 import { AuthMiddleware } from "../middleware/authmiddleware"
-import { handleCreateStartup, handleCreateStartupMetrics, handleDeleteStartup, handleDeleteStartupMetrics, handleGetAllGrants, handleGetSingleStartupInfo, handleGetStartupMeetingRequests, handleGetStartupMetrics, handleGetUserStartups, handleUpdateMeetingRequest, handleUpdateStartup, handleUpdateStartupMetrics } from "../handlers/v1/startup"
+import { handleCreateStartup, handleCreateStartupMetrics, handleDeleteStartup, handleDeleteStartupMetrics, handleGetAllGrants, handleGetSingleStartupInfo, handleGetStartScore, handleGetStartupMeetingRequests, handleGetStartupMetrics, handleGetUserStartups, handleUpdateMeetingRequest, handleUpdateStartup, handleUpdateStartupMetrics } from "../handlers/v1/startup"
 import { handleGetStartupInvestmentOffers, handleUpdateStartupInvestmentOffer } from "../handlers/v1/offers"
 const router = express.Router()
-
+router.get("/score/:id", AuthMiddleware, handleGetStartScore)
 router.post("/create", AuthMiddleware , handleCreateStartup)
 router.post("/update" , AuthMiddleware , handleUpdateStartup) 
 router.post("/delete", AuthMiddleware , handleDeleteStartup)

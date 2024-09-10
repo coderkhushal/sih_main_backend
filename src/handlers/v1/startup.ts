@@ -1,412 +1,464 @@
+require("dotenv").config()
 import { Request, Response } from "express";
 import { DbManager } from "../../utils/DbManager";
 
 const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"]
 const prisma = DbManager.getInstance().getClient()
 
-export const handleCreateStartup = async(req: Request, res: Response)=>{
-    try{
-        let{name, description, location, industry ,funding, website , foundedAt, teamSize} = req.body
-        if(!name || !description || !location || !industry || !funding || !website || !foundedAt || !teamSize){
-            return res.status(400).json({message: "All fields are required"})
+export const handleCreateStartup = async (req: Request, res: Response) => {
+    try {
+        let { name, description, location, industry, funding, website, foundedAt, teamSize } = req.body
+        if (!name || !description || !location || !industry || !funding || !website || !foundedAt || !teamSize) {
+            return res.status(400).json({ message: "All fields are required" })
         }
-        if(industries.includes(industry.toUpperCase()) === false){
-            return res.status(400).json({message: "Invalid Industry"})
+        if (industries.includes(industry.toUpperCase()) === false) {
+            return res.status(400).json({ message: "Invalid Industry" })
         }
-        if(req.body.user.role.includes("ENTREPRENEUR") === false){
-            return res.status(400).json({message: "You must be a entrepreneur to create a startup"})
+        if (req.body.user.role.includes("ENTREPRENEUR") === false) {
+            return res.status(400).json({ message: "You must be a entrepreneur to create a startup" })
         }
         let startup = await prisma.startup.create({
-            data:{
+            data: {
                 name,
                 description,
-                location, 
+                location,
                 industry,
                 funding,
                 website,
                 foundedAt,
-                teamSize, 
-                founder : {
-                    connect :{
+                teamSize,
+                founder: {
+                    connect: {
                         id: req.body.user.id
                     }
                 }
             }
         })
-        return res.status(200).json({message: "Startup created successfully", startupId: startup.id})
+        return res.status(200).json({ message: "Startup created successfully", startupId: startup.id })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({ message: "Internal Server Error" })
     }
 }
-export const handleGetSingleStartupInfo = async(req: Request, res: Response)=>{
-    try{
-        let {id} = req.params
-        if(!id){
-            return res.status(400).json({message: "Startup Id is required"})
+export const handleGetSingleStartupInfo = async (req: Request, res: Response) => {
+    try {
+        let { id } = req.params
+        if (!id) {
+            return res.status(400).json({ message: "Startup Id is required" })
         }
         let startup = await prisma.startup.findUnique({
-            where:{
-                id:Number.parseInt(id)
+            where: {
+                id: Number.parseInt(id)
             }
         })
-        if(!startup){
-            return res.status(400).json({message: "Startup not found"})
+        if (!startup) {
+            return res.status(400).json({ message: "Startup not found" })
         }
-        return res.status(200).json({startup})
+        return res.status(200).json({ startup })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({ message: "Internal Server Error" })
     }
 }
 
-export const handleGetUserStartups = async(req: Request, res: Response)=>{
-    try{
+export const handleGetUserStartups = async (req: Request, res: Response) => {
+    try {
         let startups = await prisma.startup.findMany({
-            where:{
+            where: {
                 founderId: req.body.user.id
             }
         })
-        return res.status(200).json({startups})
+        return res.status(200).json({ startups })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({ message: "Internal Server Error" })
     }
 }
-export const handleUpdateStartup= async(req: Request, res: Response)=>{
+export const handleUpdateStartup = async (req: Request, res: Response) => {
 
-    try{
-        let{startupId, name, description, location, industry ,funding, website , foundedAt, teamSize} = req.body
-        if(!startupId){
-            return res.status(400).json({message:"Startup Id is required"})
+    try {
+        let { startupId, name, description, location, industry, funding, website, foundedAt, teamSize } = req.body
+        if (!startupId) {
+            return res.status(400).json({ message: "Startup Id is required" })
         }
-        if(!name && !description && !location && !industry && !funding && !website && !foundedAt && !teamSize){
-            return res.status(400).json({message: "Nothing to update"})
+        if (!name && !description && !location && !industry && !funding && !website && !foundedAt && !teamSize) {
+            return res.status(400).json({ message: "Nothing to update" })
         }
         let existingstartup = await prisma.startup.findUnique({
-            where:{
+            where: {
                 id: startupId
             }
         })
-        if(! existingstartup ){
-            return res.status(400).json({message: "Startup not found"})
+        if (!existingstartup) {
+            return res.status(400).json({ message: "Startup not found" })
         }
-        if(existingstartup.founderId !== req.body.user.id){
-            return res.status(400).json({message: "Unauthorized"})
+        if (existingstartup.founderId !== req.body.user.id) {
+            return res.status(400).json({ message: "Unauthorized" })
         }
         let startup = await prisma.startup.update({
-            where:{
+            where: {
                 id: startupId
             },
-            data:{
+            data: {
                 name,
                 description,
-                location, 
+                location,
                 industry,
                 funding,
                 website,
                 foundedAt,
-                teamSize, 
+                teamSize,
             }
         })
-        return res.status(200).json({message: "Startup updated successfully"})
+        return res.status(200).json({ message: "Startup updated successfully" })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({ message: "Internal Server Error" })
     }
 }
-export const handleDeleteStartup = async(req: Request, res: Response)=>{
-    try{
-        let {startupId} = req.body
-        if(!startupId){
-            return res.status(400).json({message: "Startup Id is required"})
+export const handleDeleteStartup = async (req: Request, res: Response) => {
+    try {
+        let { startupId } = req.body
+        if (!startupId) {
+            return res.status(400).json({ message: "Startup Id is required" })
         }
         let startup = await prisma.startup.findUnique({
-            where:{
+            where: {
                 id: startupId
             }
         })
-        if(!startup){
-            return res.status(400).json({message: "Startup not found"})
+        if (!startup) {
+            return res.status(400).json({ message: "Startup not found" })
         }
-        if(startup.founderId !== req.body.user.id){
-            return res.status(400).json({message: "Unauthorized"})
+        if (startup.founderId !== req.body.user.id) {
+            return res.status(400).json({ message: "Unauthorized" })
         }
         await prisma.startup.delete({
-            where:{
+            where: {
                 id: startupId
             }
         })
-        return res.status(200).json({message: "Startup deleted successfully"})
+        return res.status(200).json({ message: "Startup deleted successfully" })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({ message: "Internal Server Error" })
     }
 }
-export const handleCreateStartupMetrics = async(req: Request, res: Response)=>{
-    try{
-        let {startupId, period, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway  } = req.body
-        if( !startupId  ){ 
-            return res.status(400).json({"message":"startupId not found"})
+export const handleCreateStartupMetrics = async (req: Request, res: Response) => {
+    try {
+        let { startupId, period, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway } = req.body
+        if (!startupId) {
+            return res.status(400).json({ "message": "startupId not found" })
 
         }
         let startup = await prisma.startup.findUnique({
-            where:{
+            where: {
                 id: startupId
             }
         })
-        if(!startup){
-            return res.status(400).json({message: "Startup not found"})
+        if (!startup) {
+            return res.status(400).json({ message: "Startup not found" })
         }
-        if(startup.founderId !== req.body.user.id){
-            return res.status(400).json({message: "Unauthorized"})
+        if (startup.founderId !== req.body.user.id) {
+            return res.status(400).json({ message: "Unauthorized" })
         }
-        let perioddatetime  = new Date(period)
-        if(perioddatetime.toString() === "Invalid Date"){
-            return res.status(400).json({message: "Invalid date"})
+        let perioddatetime = new Date(period)
+        if (perioddatetime.toString() === "Invalid Date") {
+            return res.status(400).json({ message: "Invalid date" })
         }
-        perioddatetime.setHours(0,0,0,0)
+        perioddatetime.setHours(0, 0, 0, 0)
         let metrics = await prisma.metrics.create({
-            data:{
-                 period:perioddatetime, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway,
-                 
-                startup:{
-                    connect:{
+            data: {
+                period: perioddatetime, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway,
+
+                startup: {
+                    connect: {
                         id: startupId
                     }
                 }
             }
         })
-        return res.status(200).json({message: "Metrics created successfully",metricsId:metrics.id})
+        return res.status(200).json({ message: "Metrics created successfully", metricsId: metrics.id })
 
-    } 
-    catch(err){
+    }
+    catch (err) {
         console.log(err)
-        return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({ message: "Internal Server Error" })
     }
 }
 
-export const handleUpdateStartupMetrics = async(req: Request, res: Response) =>{
-    try{
+export const handleUpdateStartupMetrics = async (req: Request, res: Response) => {
+    try {
 
-        let {metricsId, period, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway, createdAt, updatedAt
-} = req.body
-        if(!metricsId){
-            return res.status(400).json({message: "Metrics Id is required"})
+        let { metricsId, period, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway, createdAt, updatedAt
+        } = req.body
+        if (!metricsId) {
+            return res.status(400).json({ message: "Metrics Id is required" })
         }
         let metrics = await prisma.metrics.findUnique({
-            where:{
+            where: {
                 id: metricsId
             }
         })
-        if(!metrics){
-            return res.status(400).json({message: "Metrics not found"})
+        if (!metrics) {
+            return res.status(400).json({ message: "Metrics not found" })
         }
         let startup = await prisma.startup.findUnique({
-            where:{
+            where: {
                 id: metrics.startupId
             }
         })
-        if(!startup){
-            return res.status(400).json({message: "Startup not found"})
+        if (!startup) {
+            return res.status(400).json({ message: "Startup not found" })
         }
-        if(startup.founderId !== req.body.user.id){
-            return res.status(400).json({message: "Unauthorized"})
+        if (startup.founderId !== req.body.user.id) {
+            return res.status(400).json({ message: "Unauthorized" })
         }
-        let perioddatetime 
-        if(period){
+        let perioddatetime
+        if (period) {
 
-             perioddatetime  = new Date(period)
-            if(perioddatetime.toString() === "Invalid Date"){
-                return res.status(400).json({message: "Invalid date"})
+            perioddatetime = new Date(period)
+            if (perioddatetime.toString() === "Invalid Date") {
+                return res.status(400).json({ message: "Invalid date" })
             }
-            perioddatetime.setHours(0,0,0,0)
+            perioddatetime.setHours(0, 0, 0, 0)
         }
         let updatedMetrics = await prisma.metrics.update({
-            where:{
+            where: {
                 id: metricsId
             },
-            data:{
-                 period:perioddatetime, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway, createdAt, updatedAt
+            data: {
+                period: perioddatetime, retention_rate, mrr_growth, itv_cac_ratio, nps_score, conversion_rate, revenue, expenses, valuation, net_profit, gross_profit, gross_margin, founders_equity, investors_equity, employees_equity, customers, employees, churnRate, burnRate, cac, equity, runway, createdAt, updatedAt
 
 
             }
         })
-        return res.status(200).json({success: true, message: "Metrics updated successfully"})
+        return res.status(200).json({ success: true, message: "Metrics updated successfully" })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({success: false,message: "Internal Server Error"})
+        return res.status(500).json({ success: false, message: "Internal Server Error" })
     }
 }
 
-export const handleDeleteStartupMetrics = async(req : Request, res: Response)=>{
-    try{
-        let {metricsId} = req.body
-        if(!metricsId){
-            return res.status(400).json({message: "Metrics Id is required"})
+export const handleDeleteStartupMetrics = async (req: Request, res: Response) => {
+    try {
+        let { metricsId } = req.body
+        if (!metricsId) {
+            return res.status(400).json({ message: "Metrics Id is required" })
         }
         let metrics = await prisma.metrics.findUnique({
-            where:{
+            where: {
                 id: metricsId
             }
         })
-        if(!metrics){
-            return res.status(400).json({message: "Metrics not found"})
+        if (!metrics) {
+            return res.status(400).json({ message: "Metrics not found" })
         }
         let startup = await prisma.startup.findUnique({
-            where:{
+            where: {
                 id: metrics.startupId
             }
         })
-        if(!startup){
-            return res.status(400).json({message: "Startup not found"})
+        if (!startup) {
+            return res.status(400).json({ message: "Startup not found" })
         }
-        if(startup.founderId !== req.body.user.id){
-            return res.status(400).json({message: "Unauthorized"})
+        if (startup.founderId !== req.body.user.id) {
+            return res.status(400).json({ message: "Unauthorized" })
         }
         await prisma.metrics.delete({
-            where:{
+            where: {
                 id: metricsId
             }
         })
-        return res.status(200).json({message: "Metrics deleted successfully"})
+        return res.status(200).json({ message: "Metrics deleted successfully" })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({ message: "Internal Server Error" })
     }
 }
-export const handleGetStartupMetrics = async(req: Request, res: Response)=>{
-    try{
-        let {startupId} = req.body
-        if(!startupId){
-            return res.status(400).json({message: "Startup Id is required"})
+export const handleGetStartupMetrics = async (req: Request, res: Response) => {
+    try {
+        let { startupId } = req.body
+        if (!startupId) {
+            return res.status(400).json({ message: "Startup Id is required" })
         }
         let startup = await prisma.startup.findUnique({
-            where:{
+            where: {
                 id: startupId
             },
         })
-        if(!startup){
-            return res.status(400).json({message: "Startup not found"})
+        if (!startup) {
+            return res.status(400).json({ message: "Startup not found" })
         }
         let metrics = await prisma.metrics.findMany({
-            where:{
+            where: {
                 startupId
             },
-            orderBy:{
+            orderBy: {
                 period: "desc"
             }
         })
-        return res.status(200).json({metrics})
+        return res.status(200).json({ metrics })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({ message: "Internal Server Error" })
     }
 }
 
 
-export const handleGetStartupMeetingRequests= async(req: Request, res: Response) => {
+export const handleGetStartupMeetingRequests = async (req: Request, res: Response) => {
 
-    try{
-        let {startupId} = req.body
-        if(!startupId){
-            return res.status(400).json({msg: "Startup Id is required"})
+    try {
+        let { startupId } = req.body
+        if (!startupId) {
+            return res.status(400).json({ msg: "Startup Id is required" })
         }
         let meetingrequests = await prisma.meetingRequst.findMany({
-            where:{
+            where: {
                 startupId: startupId
             },
-            orderBy:{
+            orderBy: {
                 status: "asc"
             }
         })
         return res.json(meetingrequests)
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({msg: "Internal Server Error"})
+        return res.status(500).json({ msg: "Internal Server Error" })
     }
 }
 
 
-export const handleUpdateMeetingRequest = async(req: Request, res: Response) => {
-    try{
-        const {meetingRequestId,   status, remarks} = req.body
-        if(!meetingRequestId || !status || !remarks){
-            return res.status(400).json({msg: "MeetingRequestId and status is required"})
+export const handleUpdateMeetingRequest = async (req: Request, res: Response) => {
+    try {
+        const { meetingRequestId, status, remarks } = req.body
+        if (!meetingRequestId || !status || !remarks) {
+            return res.status(400).json({ msg: "MeetingRequestId and status is required" })
         }
-        
-        if(status=="PENDING" || (status!="APPROVED" && status!="REJECTED")){
-            return res.status(400).json({msg: "Invalid Status"})
+
+        if (status == "PENDING" || (status != "APPROVED" && status != "REJECTED")) {
+            return res.status(400).json({ msg: "Invalid Status" })
         }
-        
+
         let existingmeetingrequest = await prisma.meetingRequst.findUnique({
-            where:{
+            where: {
                 id: meetingRequestId
             },
-            include:{
-                startup:true
+            include: {
+                startup: true
             }
         })
-        if(!existingmeetingrequest){
-            return res.status(400).json({msg: "Meeting Request not found"})
+        if (!existingmeetingrequest) {
+            return res.status(400).json({ msg: "Meeting Request not found" })
         }
-        if(existingmeetingrequest.status !== "PENDING"){
-            return res.status(400).json({msg: "Meeting Request already processed"})
+        if (existingmeetingrequest.status !== "PENDING") {
+            return res.status(400).json({ msg: "Meeting Request already processed" })
         }
-        if(existingmeetingrequest.startup.founderId !== req.body.user.id){
-            return res.status(400).json({msg: "Unauthorized"})
+        if (existingmeetingrequest.startup.founderId !== req.body.user.id) {
+            return res.status(400).json({ msg: "Unauthorized" })
         }
         let meetingrequest = await prisma.meetingRequst.update({
-            where:{
+            where: {
                 id: meetingRequestId
             },
-            data:{
+            data: {
                 status,
                 remarks
             }
         })
-       if(status.toUpperCase()=="APPROVED"){
+        if (status.toUpperCase() == "APPROVED") {
 
-           let meeting = await prisma.meeting.create({
-               data:{
-                   date: meetingrequest.date,
-                   duration: meetingrequest.duration,
-                   link:"http://meet.google.com",
-                   startupId: meetingrequest.startupId,
-                   investorId: meetingrequest.investorId  ,
-                   notes:remarks ,
-                   meetingRequestId: meetingRequestId
+            let meeting = await prisma.meeting.create({
+                data: {
+                    date: meetingrequest.date,
+                    duration: meetingrequest.duration,
+                    link: "http://meet.google.com",
+                    startupId: meetingrequest.startupId,
+                    investorId: meetingrequest.investorId,
+                    notes: remarks,
+                    meetingRequestId: meetingRequestId
                 }
             })
-        } 
-        return res.json({msg: "Updated Successfully"})
+        }
+        return res.json({ msg: "Updated Successfully" })
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({msg: "Internal Server Error"})
+        return res.status(500).json({ msg: "Internal Server Error" })
     }
 }
 
-export const handleGetAllGrants = async(req: Request, res: Response) => {
-    try{
+export const handleGetAllGrants = async (req: Request, res: Response) => {
+    try {
         let grants = await prisma.grant.findMany({
-            orderBy:{
+            orderBy: {
                 isAssigned: "asc"
             }
         })
         return res.json(grants)
     }
-    catch(err){
+    catch (err) {
         console.log(err)
-        return res.status(500).json({msg: "Internal Server Error"})
+        return res.status(500).json({ msg: "Internal Server Error" })
+    }
+}
+export const handleGetStartScore = async (req: Request, res: Response) => {
+    try {
+        const metrics = await prisma.metrics.findFirst({
+            where: {
+                startupId: Number.parseInt(req.params.id)
+            },
+            orderBy: {
+                period: "desc"
+            }
+        })
+        if (!metrics) {
+            return res.status(400).json({ msg: "Metrics not found" })
+
+
+        }
+        console.log(metrics)
+        const response = await fetch(process.env.SCORE_MODEL_URL!,  {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "foundersEquity": metrics.founders_equity,
+                "investorsEquity": metrics.investors_equity,
+                "employeesEquity": metrics.employees_equity,
+                "othersEquity": 0,
+                "burnRate": metrics.burnRate,
+                "runway": metrics.runway,
+                "cac": 0,
+                "activeUsers": metrics.customers,
+                "revenue": metrics.revenue,
+                "netProfit": metrics.net_profit,
+                "grossMargin": metrics.gross_margin,
+                "netMargin": 0,
+                "retentionRate": metrics.retention_rate,
+                "mrrGrowth": metrics.mrr_growth,
+                "ltvCacRatio": metrics.itv_cac_ratio,
+                "npsScore": metrics.nps_score,
+                "conversionRate": metrics.conversion_rate,
+            })
+            
+        })
+        let data =await response.json()
+        return res.json({data})
+
+    }
+    catch (err) {
+        console.log(err)
+        return res.status(500).json({ msg: "Internal Server Error" })
     }
 }

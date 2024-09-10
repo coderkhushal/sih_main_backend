@@ -8,6 +8,7 @@ const authmiddleware_1 = require("../middleware/authmiddleware");
 const startup_1 = require("../handlers/v1/startup");
 const offers_1 = require("../handlers/v1/offers");
 const router = express_1.default.Router();
+router.get("/score/:id", authmiddleware_1.AuthMiddleware, startup_1.handleGetStartScore);
 router.post("/create", authmiddleware_1.AuthMiddleware, startup_1.handleCreateStartup);
 router.post("/update", authmiddleware_1.AuthMiddleware, startup_1.handleUpdateStartup);
 router.post("/delete", authmiddleware_1.AuthMiddleware, startup_1.handleDeleteStartup);

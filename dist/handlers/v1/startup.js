@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleGetAllGrants = exports.handleUpdateMeetingRequest = exports.handleGetStartupMeetingRequests = exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleGetSingleStartupInfo = exports.handleCreateStartup = void 0;
+exports.handleGetStartScore = exports.handleGetAllGrants = exports.handleUpdateMeetingRequest = exports.handleGetStartupMeetingRequests = exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleGetSingleStartupInfo = exports.handleCreateStartup = void 0;
+require("dotenv").config();
 const DbManager_1 = require("../../utils/DbManager");
 const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"];
 const prisma = DbManager_1.DbManager.getInstance().getClient();
@@ -22,7 +23,7 @@ const handleCreateStartup = (req, res) => __awaiter(void 0, void 0, void 0, func
         if (industries.includes(industry.toUpperCase()) === false) {
             return res.status(400).json({ message: "Invalid Industry" });
         }
-        if (req.body.user.role.includes("ENTERPRENEUR") === false) {
+        if (req.body.user.role.includes("ENTREPRENEUR") === false) {
             return res.status(400).json({ message: "You must be a entrepreneur to create a startup" });
         }
         let startup = yield prisma.startup.create({
@@ -192,7 +193,7 @@ const handleCreateStartupMetrics = (req, res) => __awaiter(void 0, void 0, void 
                 }
             }
         });
-        return res.status(200).json({ message: "Metrics created successfully" });
+        return res.status(200).json({ message: "Metrics created successfully", metricsId: metrics.id });
     }
     catch (err) {
         console.log(err);
@@ -410,3 +411,51 @@ const handleGetAllGrants = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.handleGetAllGrants = handleGetAllGrants;
+const handleGetStartScore = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const metrics = yield prisma.metrics.findFirst({
+            where: {
+                startupId: Number.parseInt(req.params.id)
+            },
+            orderBy: {
+                period: "desc"
+            }
+        });
+        if (!metrics) {
+            return res.status(400).json({ msg: "Metrics not found" });
+        }
+        console.log(metrics);
+        const response = yield fetch(process.env.SCORE_MODEL_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "foundersEquity": metrics.founders_equity,
+                "investorsEquity": metrics.investors_equity,
+                "employeesEquity": metrics.employees_equity,
+                "othersEquity": 0,
+                "burnRate": metrics.burnRate,
+                "runway": metrics.runway,
+                "cac": 0,
+                "activeUsers": metrics.customers,
+                "revenue": metrics.revenue,
+                "netProfit": metrics.net_profit,
+                "grossMargin": metrics.gross_margin,
+                "netMargin": 0,
+                "retentionRate": metrics.retention_rate,
+                "mrrGrowth": metrics.mrr_growth,
+                "ltvCacRatio": metrics.itv_cac_ratio,
+                "npsScore": metrics.nps_score,
+                "conversionRate": metrics.conversion_rate,
+            })
+        });
+        let data = yield response.json();
+        return res.json({ data });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleGetStartScore = handleGetStartScore;
