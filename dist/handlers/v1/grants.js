@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleDeleteGrantApplication = exports.handleSubmitGrantApplication = exports.handleAssignGrant = exports.handleGetApplications = exports.handleGetGrants = exports.handleDeleteGrant = exports.handleUpdateGrant = exports.handleCreateGrant = void 0;
+exports.handleGetStartupappliedgrants = exports.handleDeleteGrantApplication = exports.handleSubmitGrantApplication = exports.handleAssignGrant = exports.handleGetApplications = exports.handleGetGrants = exports.handleDeleteGrant = exports.handleUpdateGrant = exports.handleCreateGrant = void 0;
 const DbManager_1 = require("../../utils/DbManager");
 const prisma = DbManager_1.DbManager.getInstance().getClient();
 const handleCreateGrant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -352,3 +352,23 @@ const handleDeleteGrantApplication = (req, res) => __awaiter(void 0, void 0, voi
     }
 });
 exports.handleDeleteGrantApplication = handleDeleteGrantApplication;
+const handleGetStartupappliedgrants = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let { startupId } = req.body;
+        if (!startupId) {
+            return res.status(200).json({ "messageL": "startup id not found" });
+        }
+        const grantsapplied = yield prisma.grantApplication.findMany({
+            where: {
+                startupId: startupId
+            }
+        });
+        if (!grantsapplied) {
+            return res.status(200).json({ msg: "No Grants applied", data: [] });
+        }
+        return res.status(200).json({ msg: "Grants applied", data: grantsapplied });
+    }
+    catch (err) {
+    }
+});
+exports.handleGetStartupappliedgrants = handleGetStartupappliedgrants;

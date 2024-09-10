@@ -371,3 +371,25 @@ export const handleDeleteGrantApplication = async(req: Request, res: Response) =
     }
 
 }
+export const handleGetStartupappliedgrants= async(req: Request, res: Response) =>{
+    try{
+        let {startupId} = req.body
+        if(!startupId){
+            return res.status(200).json({"messageL":"startup id not found"})
+        }
+        const grantsapplied = await prisma.grantApplication.findMany({
+
+            where:{
+                startupId: startupId
+            }
+        })
+        if( !grantsapplied) {
+            return res.status(200).json({msg:"No Grants applied", data: []})
+
+        }
+        return res.status(200).json({msg:"Grants applied", data: grantsapplied})        
+    }   
+    catch(err){
+
+    }
+}
