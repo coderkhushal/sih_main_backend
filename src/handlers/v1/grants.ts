@@ -381,6 +381,9 @@ export const handleGetStartupappliedgrants= async(req: Request, res: Response) =
 
             where:{
                 startupId: startupId
+            },
+            include:{
+                grant:true
             }
         })
         if( !grantsapplied) {

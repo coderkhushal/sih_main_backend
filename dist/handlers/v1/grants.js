@@ -361,6 +361,9 @@ const handleGetStartupappliedgrants = (req, res) => __awaiter(void 0, void 0, vo
         const grantsapplied = yield prisma.grantApplication.findMany({
             where: {
                 startupId: startupId
+            },
+            include: {
+                grant: true
             }
         });
         if (!grantsapplied) {
