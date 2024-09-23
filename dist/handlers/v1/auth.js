@@ -43,7 +43,7 @@ const handlesignup = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 role
             }
         });
-        let token = jsonwebtoken_1.default.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+        let token = jsonwebtoken_1.default.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1d" });
         res.cookie("token", token);
         res.json({ success: true, message: "Created Successfully", token: token, user: { id: user.id, role: user.role } });
     }
@@ -71,7 +71,7 @@ const handleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid Credentials" });
         }
-        let token = jsonwebtoken_1.default.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+        let token = jsonwebtoken_1.default.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1d" });
         res.cookie("token", token);
         res.json({ success: true, message: "Logged In Successfully", token: token, user: { id: user.id, role: user.role } });
     }
@@ -93,7 +93,7 @@ const handleResetPassword = (req, res) => __awaiter(void 0, void 0, void 0, func
             }
         });
         if (!user) {
-            return res.status(400).json({ message: "User not found" });
+            return res.status(400).json({ message: "Invalid Email" });
         }
         const resetPasswordToken = crypto_1.default.randomBytes(20).toString("hex");
         yield prisma.user.update({
@@ -102,7 +102,7 @@ const handleResetPassword = (req, res) => __awaiter(void 0, void 0, void 0, func
             },
             data: {
                 resetPasswordToken,
-                resetPasswordTokenExpiry: new Date() // Convert Date.now() to a Date object
+                resetPasswordTokenExpiry: new Date(new Date().getTime() + 10 * 60000)
             }
         });
         let response = yield MailManager_1.MailManager.getInstance().sendMail(email, resetPasswordToken);

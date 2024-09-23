@@ -34,7 +34,7 @@ export const handlesignup = async (req: Request, res : Response)=>{
                     
                 }
             })
-            let token = jwt.sign({id: user.id}, process.env.JWT_SECRET as string, {expiresIn: "1d"})
+            let token = jwt.sign({id: user.id, name : user.name, email : user.email, role: user.role}, process.env.JWT_SECRET as string, {expiresIn: "1d"})
          
             res.cookie("token", token)
             
@@ -68,7 +68,8 @@ export const handleLogin = async (req: Request, res: Response) => {
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid Credentials" })
         }
-        let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, { expiresIn: "1d" })
+            let token = jwt.sign({id: user.id, name : user.name, email : user.email, role: user.role}, process.env.JWT_SECRET as string, {expiresIn: "1d"})
+
         res.cookie("token", token)
         res.json({ success: true, message: "Logged In Successfully", token : token , user :{id: user.id, role:user.role}})
     }
@@ -90,7 +91,7 @@ export const handleResetPassword = async (req: Request, res: Response) => {
             }
         })
         if(!user){
-            return res.status(400).json({message: "User not found"})
+            return res.status(400).json({message: "Invalid Email"})
         }
         const resetPasswordToken = crypto.randomBytes(20).toString("hex")
         await prisma.user.update({
@@ -99,7 +100,8 @@ export const handleResetPassword = async (req: Request, res: Response) => {
             },
             data:{
                  resetPasswordToken, 
-                resetPasswordTokenExpiry: new Date()  // Convert Date.now() to a Date object
+                resetPasswordTokenExpiry: new Date(new Date().getTime() + 10*60000) 
+                
                 
             }
         })

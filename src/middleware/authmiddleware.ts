@@ -15,17 +15,9 @@ export const AuthMiddleware = async(req: Request, res: Response, next: NextFunct
             return res.status(401).json({ msg: "Invalid token" });
         }
  
-    let user = await prisma.user.findUnique({
-        where: {
-            id: payload.id
-        }
-    })
-    
-    if (!user) {
-        return res.status(401).json({ msg: "Unauthorized" });
-    }
-    req.body.user = user
-    next()
+        
+            req.body.user ={id : payload.id, name: payload.name, email: payload.email, role :payload.role} 
+      next()
 }
 catch(err){
     console.log(err)

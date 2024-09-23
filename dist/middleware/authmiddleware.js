@@ -27,15 +27,7 @@ const AuthMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         if (!payload) {
             return res.status(401).json({ msg: "Invalid token" });
         }
-        let user = yield prisma.user.findUnique({
-            where: {
-                id: payload.id
-            }
-        });
-        if (!user) {
-            return res.status(401).json({ msg: "Unauthorized" });
-        }
-        req.body.user = user;
+        req.body.user = { id: payload.id, name: payload.name, email: payload.email, role: payload.role };
         next();
     }
     catch (err) {
