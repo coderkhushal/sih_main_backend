@@ -23,6 +23,7 @@ router.post("/metrics/delete", authmiddleware_1.AuthMiddleware, startup_1.handle
 router.post("/metrics", startup_1.handleGetStartupMetrics);
 router.post("/meetings/requests", authmiddleware_1.AuthMiddleware, startup_1.handleGetStartupMeetingRequests);
 router.post("/meetings/update", authmiddleware_1.AuthMiddleware, startup_1.handleUpdateMeetingRequest);
+router.get("/meetings/:startupId", authmiddleware_1.AuthMiddleware, startup_1.handleGetStartupMeetings);
 router.post("/investmentOffers", authmiddleware_1.AuthMiddleware, offers_1.handleGetStartupInvestmentOffers);
 router.post("/investmentOffers/update", authmiddleware_1.AuthMiddleware, offers_1.handleUpdateStartupInvestmentOffer);
 // router.post("/getAnalytics", handleGetStartupMetrics)

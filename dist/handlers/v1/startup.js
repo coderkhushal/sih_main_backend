@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleGetStartScore = exports.handleGetAllGrants = exports.handleUpdateMeetingRequest = exports.handleGetStartupMeetingRequests = exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleGetSingleStartupInfo = exports.handleCreateStartup = void 0;
+exports.handleGetStartScore = exports.handleGetAllGrants = exports.handleGetStartupMeetings = exports.handleUpdateMeetingRequest = exports.handleGetStartupMeetingRequests = exports.handleGetStartupMetrics = exports.handleDeleteStartupMetrics = exports.handleUpdateStartupMetrics = exports.handleCreateStartupMetrics = exports.handleDeleteStartup = exports.handleUpdateStartup = exports.handleGetUserStartups = exports.handleGetSingleStartupInfo = exports.handleCreateStartup = void 0;
 require("dotenv").config();
 const DbManager_1 = require("../../utils/DbManager");
 const industries = ["IT", "HEALTH", "FINANCE", "AGRICULTURE", "EDUCATION", "ENERGY", "TRANSPORT", "MANUFACTURING", "RETAIL", "OTHER", "REAL_ESTATE", "TOURISM", "ENTERTAINMENT"];
@@ -324,7 +324,7 @@ const handleGetStartupMeetingRequests = (req, res) => __awaiter(void 0, void 0, 
         if (!startupId) {
             return res.status(400).json({ msg: "Startup Id is required" });
         }
-        let meetingrequests = yield prisma.meetingRequst.findMany({
+        let meetingrequests = yield prisma.meetingRequest.findMany({
             where: {
                 startupId: startupId
             },
@@ -349,7 +349,7 @@ const handleUpdateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
         if (status == "PENDING" || (status != "APPROVED" && status != "REJECTED")) {
             return res.status(400).json({ msg: "Invalid Status" });
         }
-        let existingmeetingrequest = yield prisma.meetingRequst.findUnique({
+        let existingmeetingrequest = yield prisma.meetingRequest.findUnique({
             where: {
                 id: meetingRequestId
             },
@@ -366,7 +366,7 @@ const handleUpdateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
         if (existingmeetingrequest.startup.founderId !== req.body.user.id) {
             return res.status(400).json({ msg: "Unauthorized" });
         }
-        let meetingrequest = yield prisma.meetingRequst.update({
+        let meetingrequest = yield prisma.meetingRequest.update({
             where: {
                 id: meetingRequestId
             },
@@ -396,6 +396,25 @@ const handleUpdateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.handleUpdateMeetingRequest = handleUpdateMeetingRequest;
+const handleGetStartupMeetings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let { startupId } = req.params;
+        if (!startupId) {
+            return res.status(400).json({ msg: "Startup Id is required" });
+        }
+        let meetings = yield prisma.meeting.findMany({
+            where: {
+                startupId: Number.parseInt(startupId)
+            }
+        });
+        return res.status(200).json(meetings);
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+exports.handleGetStartupMeetings = handleGetStartupMeetings;
 const handleGetAllGrants = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let grants = yield prisma.grant.findMany({

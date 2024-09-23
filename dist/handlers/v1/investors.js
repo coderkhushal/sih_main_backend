@@ -57,7 +57,7 @@ const handlecreateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
         if (date.toString() === "Invalid Date") {
             return res.status(400).json({ msg: "Invalid Date" });
         }
-        let overlappingMeetingrequests = yield prisma.meetingRequst.findMany({
+        let overlappingMeetingrequests = yield prisma.meetingRequest.findMany({
             where: {
                 startupId,
                 date: {
@@ -69,7 +69,7 @@ const handlecreateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
         if (overlappingMeetingrequests.length > 0) {
             return res.status(400).json({ msg: "Some other meeting already scheduled at this time" });
         }
-        let meetingrequest = yield prisma.meetingRequst.create({
+        let meetingrequest = yield prisma.meetingRequest.create({
             data: {
                 date,
                 duration,
@@ -97,7 +97,7 @@ const handlecreateMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
 exports.handlecreateMeetingRequest = handlecreateMeetingRequest;
 const handleGetInvestorMeetingRequests = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let meetingrequests = yield prisma.meetingRequst.findMany({
+        let meetingrequests = yield prisma.meetingRequest.findMany({
             where: {
                 investorId: req.body.user.id
             }
@@ -131,7 +131,7 @@ const handleDeleteMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
         if (!meetingRequestId) {
             return res.status(400).json({ msg: "Meeting Request Id is required" });
         }
-        let meetingrequest = yield prisma.meetingRequst.findUnique({
+        let meetingrequest = yield prisma.meetingRequest.findUnique({
             where: {
                 id: meetingRequestId
             }
@@ -148,7 +148,7 @@ const handleDeleteMeetingRequest = (req, res) => __awaiter(void 0, void 0, void 
                 meetingRequestId
             }
         });
-        yield prisma.meetingRequst.delete({
+        yield prisma.meetingRequest.delete({
             where: {
                 id: meetingRequestId
             }

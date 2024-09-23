@@ -8,6 +8,11 @@ generator client {
   provider = "prisma-client-js"
   
 }
+generator erd{
+  provider = "prisma-erd-generator"
+  theme = "forest"
+  output = "../ERD.svg"
+}
 
 datasource db {
   provider = "postgresql"
@@ -39,7 +44,7 @@ model User {
 
 
 
-  MeetingRequst MeetingRequst[]
+  MeetingRequst MeetingRequest[]
 
   Investmentoffer Investmentoffer[]
 }
@@ -136,7 +141,7 @@ model Startup {
 
   Investment Investment[]
 
-  MeetingRequst MeetingRequst[]
+  MeetingRequst MeetingRequest[]
 
   Investmentoffer Investmentoffer[]
 }
@@ -297,12 +302,12 @@ model Meeting{
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
- meetingrequest MeetingRequst @relation(fields: [meetingRequestId], references: [id])
+ meetingrequest MeetingRequest @relation(fields: [meetingRequestId], references: [id])
   meetingRequestId Int @unique
 
 }
 
-model MeetingRequst{
+model MeetingRequest{
   // investor would request startup to have a meet 
 
   id Int @id @default(autoincrement())

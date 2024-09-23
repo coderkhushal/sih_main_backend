@@ -52,7 +52,7 @@ export const handlecreateMeetingRequest = async(req: Request, res: Response) => 
         if(date.toString() === "Invalid Date"){
             return res.status(400).json({msg: "Invalid Date"})
         }
-        let overlappingMeetingrequests = await prisma.meetingRequst.findMany({
+        let overlappingMeetingrequests = await prisma.meetingRequest.findMany({
             where:{
                 startupId,
                 date:{
@@ -65,7 +65,7 @@ export const handlecreateMeetingRequest = async(req: Request, res: Response) => 
         if(overlappingMeetingrequests.length > 0){
             return res.status(400).json({msg: "Some other meeting already scheduled at this time"})
         }
-        let meetingrequest= await prisma.meetingRequst.create({
+        let meetingrequest= await prisma.meetingRequest.create({
             data:{
 
                 date, 
@@ -98,7 +98,7 @@ export const handlecreateMeetingRequest = async(req: Request, res: Response) => 
 export const handleGetInvestorMeetingRequests= async(req: Request, res: Response) => {
 
     try{
-        let meetingrequests = await prisma.meetingRequst.findMany({
+        let meetingrequests = await prisma.meetingRequest.findMany({
             where:{
                 investorId: req.body.user.id
             }
@@ -131,7 +131,7 @@ export const handleDeleteMeetingRequest = async(req: Request, res: Response) => 
         if(!meetingRequestId){
             return res.status(400).json({msg: "Meeting Request Id is required"})
         }
-        let meetingrequest = await prisma.meetingRequst.findUnique({
+        let meetingrequest = await prisma.meetingRequest.findUnique({
             where:{
                 id: meetingRequestId
             }
@@ -148,7 +148,7 @@ export const handleDeleteMeetingRequest = async(req: Request, res: Response) => 
                 meetingRequestId
             }
         })
-        await prisma.meetingRequst.delete({
+        await prisma.meetingRequest.delete({
             where:{
                 id: meetingRequestId
             }

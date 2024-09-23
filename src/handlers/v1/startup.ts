@@ -321,7 +321,7 @@ export const handleGetStartupMeetingRequests = async (req: Request, res: Respons
         if (!startupId) {
             return res.status(400).json({ msg: "Startup Id is required" })
         }
-        let meetingrequests = await prisma.meetingRequst.findMany({
+        let meetingrequests = await prisma.meetingRequest.findMany({
             where: {
                 startupId: startupId
             },
@@ -349,7 +349,7 @@ export const handleUpdateMeetingRequest = async (req: Request, res: Response) =>
             return res.status(400).json({ msg: "Invalid Status" })
         }
 
-        let existingmeetingrequest = await prisma.meetingRequst.findUnique({
+        let existingmeetingrequest = await prisma.meetingRequest.findUnique({
             where: {
                 id: meetingRequestId
             },
@@ -366,7 +366,7 @@ export const handleUpdateMeetingRequest = async (req: Request, res: Response) =>
         if (existingmeetingrequest.startup.founderId !== req.body.user.id) {
             return res.status(400).json({ msg: "Unauthorized" })
         }
-        let meetingrequest = await prisma.meetingRequst.update({
+        let meetingrequest = await prisma.meetingRequest.update({
             where: {
                 id: meetingRequestId
             },
@@ -396,7 +396,25 @@ export const handleUpdateMeetingRequest = async (req: Request, res: Response) =>
         return res.status(500).json({ msg: "Internal Server Error" })
     }
 }
+export const handleGetStartupMeetings = async(req: Request, res: Response) => {
+    try{
+        let {startupId} = req.params
+        if(!startupId){
+            return res.status(400).json({msg: "Startup Id is required"})
+        }
 
+        let meetings = await prisma.meeting.findMany({
+            where:{
+                startupId: Number.parseInt(startupId) 
+            }
+        })
+        return res.status(200).json(meetings) 
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({msg: "Internal Server Error"})
+    }
+}
 export const handleGetAllGrants = async (req: Request, res: Response) => {
     try {
         let grants = await prisma.grant.findMany({
