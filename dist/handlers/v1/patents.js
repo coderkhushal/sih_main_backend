@@ -20,13 +20,14 @@ const handleCreatePatent = (req, res) => __awaiter(void 0, void 0, void 0, funct
             return res.status(400).json({ msg: "All fields are required" });
         }
         let applicationDate = new Date().toISOString();
-        let patent = yield prisma.patent.create({
+        let patent = yield prisma.iPR.create({
             data: {
                 title,
                 description,
                 pdfPath,
                 status: "PENDING",
-                startupId: startupId // Add the missing property
+                startupId: startupId, // Add the missing property
+                IPRType: "PATENT"
             }
         });
         return res.json({ msg: "Created Successfully" });
@@ -38,9 +39,10 @@ const handleCreatePatent = (req, res) => __awaiter(void 0, void 0, void 0, funct
 });
 exports.handleCreatePatent = handleCreatePatent;
 const handleupdatePatent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         let { patentId, title, description, pdfPath } = req.body;
-        const existingPatent = yield prisma.patent.findUnique({
+        const existingPatent = yield prisma.iPR.findUnique({
             where: {
                 id: patentId
             },
@@ -55,10 +57,10 @@ const handleupdatePatent = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (!existingPatent) {
             return res.status(400).json({ msg: "Patent not found" });
         }
-        if (existingPatent.startup.founderId !== req.body.user.id) {
+        if (((_a = existingPatent === null || existingPatent === void 0 ? void 0 : existingPatent.startup) === null || _a === void 0 ? void 0 : _a.founderId) !== req.body.user.id) {
             return res.status(400).json({ msg: "Unauthorized" });
         }
-        let patent = yield prisma.patent.update({
+        let patent = yield prisma.iPR.update({
             where: {
                 id: patentId
             },
@@ -87,7 +89,7 @@ const handleupdatePatentStatus = (req, res) => __awaiter(void 0, void 0, void 0,
             approvedDate = new Date().toISOString();
         }
         if (req.body.user.role.includes("GOVERNMENT")) {
-            let patent = yield prisma.patent.update({
+            let patent = yield prisma.iPR.update({
                 where: {
                     id: patentId
                 },
@@ -106,12 +108,13 @@ const handleupdatePatentStatus = (req, res) => __awaiter(void 0, void 0, void 0,
 });
 exports.handleupdatePatentStatus = handleupdatePatentStatus;
 const handleDeletePatent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         let { patentId } = req.body;
         if (!patentId) {
             return res.status(400).json({ msg: "Patent Id is required" });
         }
-        let existingpatent = yield prisma.patent.findUnique({
+        let existingpatent = yield prisma.iPR.findUnique({
             where: {
                 id: patentId
             },
@@ -126,10 +129,10 @@ const handleDeletePatent = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (!existingpatent) {
             return res.status(400).json({ msg: "Patent not found" });
         }
-        if (existingpatent.startup.founderId !== req.body.user.id) {
+        if (((_a = existingpatent === null || existingpatent === void 0 ? void 0 : existingpatent.startup) === null || _a === void 0 ? void 0 : _a.founderId) !== req.body.user.id) {
             return res.status(400).json({ msg: "Unauthorized" });
         }
-        let patent = yield prisma.patent.delete({
+        let patent = yield prisma.iPR.delete({
             where: {
                 id: patentId
             }
@@ -148,9 +151,10 @@ const handleGetPatents = (req, res) => __awaiter(void 0, void 0, void 0, functio
         if (!startupId) {
             return res.status(400).json({ msg: "Startup Id is required" });
         }
-        let patents = yield prisma.patent.findMany({
+        let patents = yield prisma.iPR.findMany({
             where: {
-                startupId
+                startupId,
+                IPRType: "PATENT"
             }
         });
         return res.json({ patents });
@@ -172,7 +176,7 @@ const handleGetPatentPdfUploadingUrl = (req, res) => __awaiter(void 0, void 0, v
                 id: startupId
             },
             include: {
-                patents: {
+                ipr: {
                     select: {
                         id: true
                     }
@@ -185,8 +189,8 @@ const handleGetPatentPdfUploadingUrl = (req, res) => __awaiter(void 0, void 0, v
         if (startup.founderId != req.body.user.id) {
             return res.status(400).json({ msg: "Unauthorized" });
         }
-        let url = yield (0, getSignedUrl_1.GetUploadingUrl)(`patents/${startupId}-${startup.patents.length + 1}`);
-        return res.json({ url, pdfPath: `https://s3.ap-south-1.amazonaws.com/bucket.khushalbhasin.live/patents/${startupId}-${startup.patents.length + 1}` });
+        let url = yield (0, getSignedUrl_1.GetUploadingUrl)(`patents/${startupId}-${startup.ipr.length + 1}`);
+        return res.json({ url, pdfPath: `https://s3.ap-south-1.amazonaws.com/bucket.khushalbhasin.live/patents/${startupId}-${startup.ipr.length + 1}` });
     }
     catch (err) {
         console.log(err);

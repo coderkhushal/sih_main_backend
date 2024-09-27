@@ -22,10 +22,9 @@ router.post("/meetings/update", AuthMiddleware, handleUpdateMeetingRequest)
 router.get("/meetings/:startupId", AuthMiddleware, handleGetStartupMeetings)
 router.post("/investmentOffers", AuthMiddleware, handleGetStartupInvestmentOffers)
 router.post("/investmentOffers/update", AuthMiddleware, handleUpdateStartupInvestmentOffer)
-// router.post("/round/create",AuthMiddleware  )
-// router.post("/rounds/update", AuthMiddleware, )
-// router.post("/rounds/delete",)
-// router.post("")
+router.post("/round/create",AuthMiddleware  )
+router.post("/rounds/update", AuthMiddleware)
+router.post("/rounds/delete", AuthMiddleware)
 // router.post("/getAnalytics", handleGetStartupMetrics)
 
 

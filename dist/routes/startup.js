@@ -26,5 +26,8 @@ router.post("/meetings/update", authmiddleware_1.AuthMiddleware, startup_1.handl
 router.get("/meetings/:startupId", authmiddleware_1.AuthMiddleware, startup_1.handleGetStartupMeetings);
 router.post("/investmentOffers", authmiddleware_1.AuthMiddleware, offers_1.handleGetStartupInvestmentOffers);
 router.post("/investmentOffers/update", authmiddleware_1.AuthMiddleware, offers_1.handleUpdateStartupInvestmentOffer);
+router.post("/round/create", authmiddleware_1.AuthMiddleware);
+router.post("/rounds/update", authmiddleware_1.AuthMiddleware);
+router.post("/rounds/delete", authmiddleware_1.AuthMiddleware);
 // router.post("/getAnalytics", handleGetStartupMetrics)
 module.exports = router;
