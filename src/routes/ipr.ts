@@ -4,7 +4,11 @@ import express from "express"
 import { AuthMiddleware } from "../middleware/authmiddleware"
 const router = express.Router()
 
-// router.post("/signup", handlesignup)
+router.get("/", AuthMiddleware, )
+router.get("/pending")
+router.get("/completed")
+router.post("/update")
+
 // router.post("/login", handleLogin)
 // router.get("/user", AuthMiddleware , handleGetUser)
 // router.post("/reset-password", handleResetPassword)
