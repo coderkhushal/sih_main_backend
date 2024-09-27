@@ -36,7 +36,6 @@ model User {
 
   grants Grant[]
 
-  IPR IPR[]
 
   meetings Meeting[]
   investments Investment[]
@@ -47,6 +46,8 @@ model User {
   MeetingRequst MeetingRequest[]
 
   Investmentoffer Investmentoffer[]
+
+  IPR_PROFESSIONAL IPR_PROFESSIONAL[]
 }
 
 // Enum for User roles
@@ -78,6 +79,8 @@ model Project {
   grants Grant[]
 
   GrantApplication GrantApplication[]
+
+  Patent IPR[]
 }
 
 // Enum for Project Status
@@ -130,7 +133,7 @@ model Startup {
   progress    Float     @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  patents     Patent[]
+  ipr     IPR[]
   metrics     Metrics[]
   grants     Grant[]
   grantsApplied GrantApplication[]
@@ -144,21 +147,10 @@ model Startup {
   MeetingRequst MeetingRequest[]
 
   Investmentoffer Investmentoffer[]
+
+  StartupRounds StartupRounds[] @relation(name: "StartupRounds_startup")
 }
 
-// IPR model
-model IPR {
-  id              Int       @id @default(autoincrement())
-  title           String
-  type            IPRType
-  status          IPRStatus
-  user            User      @relation(fields: [userId], references: [id])
-  userId          Int
-  applicationDate DateTime
-  approvalDate    DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-}
 
 // Enum for IPR Type
 enum IPRType {
@@ -174,12 +166,16 @@ enum IPRStatus {
   REJECTED
 }
 
+
 // Patent model (for managing startup patents and storing PDFs)
-model Patent {
+model IPR {
   id              Int       @id @default(autoincrement())
   title           String
-  startup         Startup   @relation(fields: [startupId], references: [id])
-  startupId       Int
+  startup         Startup?   @relation(fields: [startupId], references: [id])
+  startupId       Int?
+  project         Project?   @relation(fields: [projectId], references: [id])
+  projectId       Int?
+  IPRType         IPRType
   description     String
   patentNumber    String    @unique @default(uuid())
   pdfPath         String
@@ -188,6 +184,8 @@ model Patent {
   status          IPRStatus
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  IPR_PROFESSIONAL IPR_PROFESSIONAL[]
 }
 
 // Metrics model (tracks performance and financial data for startups)
@@ -221,6 +219,19 @@ model Metrics {
   updatedAt DateTime @updatedAt
 }
 
+model StartupRounds {
+  id Int @default(autoincrement())  @unique
+  startup Startup @relation(name: "StartupRounds_startup", fields: [startupId], references: [id])
+  startupId Int
+
+  round_name String
+  date String  
+  valuation Float
+  investors String
+  amount Float
+  equity Float
+  
+}
 // Analytics model (stores aggregated or derived insights)
 model Analytics {
   id        Int           @id @default(autoincrement())
@@ -313,7 +324,6 @@ model MeetingRequest{
   id Int @id @default(autoincrement())
   investor User @relation(fields: [investorId], references: [id])
   investorId Int
-  
    startup Startup @relation(fields: [startupId], references: [id])
   startupId Int
   meeting Meeting?
@@ -338,4 +348,14 @@ model Investmentoffer{
   status IPRStatus
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model IPR_PROFESSIONAL{
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  assigned_ipr IPR[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
 }

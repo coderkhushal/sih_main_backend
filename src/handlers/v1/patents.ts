@@ -11,13 +11,14 @@ export const handleCreatePatent = async (req: Request, res: Response) => {
         }
 
         let applicationDate = new Date().toISOString()
-        let patent = await prisma.patent.create({
+        let patent = await prisma.iPR.create({
             data: {
                 title,
                 description,
                 pdfPath,
                 status: "PENDING",
-                startupId: startupId // Add the missing property
+                startupId: startupId, // Add the missing property
+                IPRType:"PATENT"
             }
         })
         return res.json({ msg: "Created Successfully" })
@@ -31,7 +32,7 @@ export const handleCreatePatent = async (req: Request, res: Response) => {
 export const handleupdatePatent = async (req: Request, res: Response) => {
     try {
         let { patentId, title, description, pdfPath } = req.body
-        const existingPatent = await prisma.patent.findUnique({
+        const existingPatent = await prisma.iPR.findUnique({
             where: {
                 id: patentId
             }, 
@@ -46,11 +47,11 @@ export const handleupdatePatent = async (req: Request, res: Response) => {
         if (!existingPatent) {
             return res.status(400).json({ msg: "Patent not found" })
         }
-        if(existingPatent.startup.founderId !== req.body.user.id){
+        if(existingPatent?.startup?.founderId !== req.body.user.id){
             return res.status(400).json({msg: "Unauthorized"})
         }
         
-        let patent = await prisma.patent.update({
+        let patent = await prisma.iPR.update({
             where: {
                 id: patentId
             },
@@ -79,7 +80,7 @@ export const handleupdatePatentStatus = async (req: Request, res: Response) => {
             approvedDate = new Date().toISOString()
         }
         if (req.body.user.role.includes("GOVERNMENT")) {
-            let patent = await prisma.patent.update({
+            let patent = await prisma.iPR.update({
                 where: {
                     id: patentId
                 },
@@ -102,7 +103,7 @@ export const handleDeletePatent = async(req: Request, res: Response) => {
         if(!patentId){
             return res.status(400).json({msg: "Patent Id is required"})
         }
-        let existingpatent = await prisma.patent.findUnique({
+        let existingpatent = await prisma.iPR.findUnique({
             where:{
                 id: patentId
             },
@@ -117,11 +118,11 @@ export const handleDeletePatent = async(req: Request, res: Response) => {
         if(!existingpatent){
             return res.status(400).json({msg: "Patent not found"})
         }
-        if(existingpatent.startup.founderId !== req.body.user.id){
+        if(existingpatent?.startup?.founderId !== req.body.user.id){
             return res.status(400).json({msg: "Unauthorized"})
         }
 
-        let patent = await prisma.patent.delete({
+        let patent = await prisma.iPR.delete({
             where:{
                 id: patentId
             }
@@ -140,9 +141,10 @@ export const handleGetPatents =async(req: Request, res: Response) => {
         if(!startupId){
             return res.status(400).json({msg: "Startup Id is required"})
         }
-        let patents = await prisma.patent.findMany({
+        let patents = await prisma.iPR.findMany({
             where:{
-                startupId
+                startupId,
+                IPRType:"PATENT"
             }
         })
         return res.json({patents})
@@ -165,7 +167,7 @@ export const handleGetPatentPdfUploadingUrl = async(req: Request, res: Response)
                 id: startupId
             },
             include:{
-                patents:{
+                ipr :{
                     select:{
                         id: true
                     }
@@ -178,9 +180,9 @@ export const handleGetPatentPdfUploadingUrl = async(req: Request, res: Response)
         if(startup.founderId!=req.body.user.id){
             return res.status(400).json({msg: "Unauthorized"})
         }
-        let url = await GetUploadingUrl(`patents/${startupId}-${startup.patents.length+1}`)
+        let url = await GetUploadingUrl(`patents/${startupId}-${startup.ipr.length+1}`)
 
-        return res.json({url, pdfPath:`https://s3.ap-south-1.amazonaws.com/bucket.khushalbhasin.live/patents/${startupId}-${startup.patents.length+1}`})
+        return res.json({url, pdfPath:`https://s3.ap-south-1.amazonaws.com/bucket.khushalbhasin.live/patents/${startupId}-${startup.ipr.length+1}`})
     }
     catch(err){
         console.log(err)
